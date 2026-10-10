@@ -118,7 +118,7 @@ if(isCafe()) document.getElementById("cafeBar").innerHTML = `<div class="mode-ba
 /* ===== デザインの状態 ===== */
 let st = { bg: "#ffffff", photo: null, texts: [] };   // photo: {src, fileId, x, y, scale, rot, w, h}
 let sel = "photo";                                     // 選んでいるもの："photo" または テキストの番号
-let img = null, uploading = false, photoFileId = "";
+let img = null, origImg = null, cut = false, cutting = false, uploading = false, photoFileId = "";
 const hist = [], future = [];
 const snap = () => JSON.stringify({ bg: st.bg, photo: st.photo && { ...st.photo, src: undefined }, texts: st.texts });
 function push(){ hist.push(snap()); if(hist.length > 60) hist.shift(); future.length = 0; syncUndo(); }
@@ -225,7 +225,7 @@ async function onPhoto(file){
   try{
     const im = await loadImage(file);
     const big = toJpeg(im, 2400, .92);
-    img = new Image(); img.src = big; await img.decode();
+    img = new Image(); img.src = big; await img.decode(); origImg = img; cut = false; cutImg = null;
     push();
     st.photo = { w: img.naturalWidth, h: img.naturalHeight, x: PW / 2, y: PH / 2, scale: 1, rot: 0 };
     fitCover(); sel = "photo"; draw(); renderPanel();
@@ -236,6 +236,27 @@ async function onPhoto(file){
   uploading = false;
 }
 function setState(t, bad){ const el = document.getElementById("photoState"); if(el){ el.textContent = t; el.style.color = bad ? "var(--danger)" : ""; } }
+
+/* ===== 背景透過（ブラウザの中だけで処理。写真はほかの会社に送られない） ===== */
+let cutImg = null;
+async function removeBg(){
+  if(cutting || !origImg) return;
+  if(cutImg && cutImg.dataset.from === origImg.src.slice(-64)){ img = cutImg; cut = true; draw(); renderPanel(); return; }
+  cutting = true; renderPanel();
+  try{
+    const { removeBackground } = await import("https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm");
+    const blob = await removeBackground(origImg.src, {
+      model: "isnet_quint8", output: { format: "image/png" },
+      progress: (key, cur, total) => { const el = document.getElementById("cutState"); if(el && total) el.textContent = "準備しています… " + Math.round(cur / total * 100) + "%"; }
+    });
+    const ci = new Image(); ci.src = URL.createObjectURL(blob); await ci.decode(); ci.dataset.from = origImg.src.slice(-64);
+    cutImg = ci; img = ci; cut = true;
+    if(st.bg === "#ffffff") toast("背景を消しました。「背景色」から色を選べます");
+  }catch(err){
+    toast("背景を消せませんでした。別の写真か、時間をおいてお試しください");
+  }
+  cutting = false; draw(); renderPanel();
+}
 
 /* ===== 道具パネル ===== */
 let tool = "photo";
@@ -254,6 +275,9 @@ function renderPanel(){
       ${has ? `<div class="row"><label for="sc">大きさ</label><input type="range" id="sc" min="5" max="400" value="${Math.round(st.photo.scale * 100)}"></div>
       <div class="row"><label for="rt">回転</label><input type="range" id="rt" min="-180" max="180" value="${Math.round(st.photo.rot)}"></div>
       <div class="btns"><button type="button" id="fit">ケース全体に合わせる</button><button type="button" id="ctr">中央にそろえる</button><button type="button" id="r90">90°回す</button></div>
+      <div class="row"><label>背景透過</label>
+        <div class="btns">${cut ? `<button type="button" id="uncut">背景を元に戻す</button>` : `<button type="button" id="cut" ${cutting ? "disabled" : ""}>${cutting ? "背景を消しています…" : "背景を消す（透過）"}</button>`}</div>
+        <p class="help" id="cutState">${cut ? "背景を消しました。左の「背景色」から好きな色を選べます。" : "ペットや人だけを切り抜きます。はじめて使うときは準備に30秒〜1分ほどかかります。"}</p></div>
       <p class="help">写真は指やマウスで動かせます。スマホは2本指で拡大・回転できます。</p>` : ""}`;
     panel.querySelector("#file").onchange = e => onPhoto(e.target.files[0]);
     if(has){
@@ -264,6 +288,9 @@ function renderPanel(){
       panel.querySelector("#fit").onclick = () => { push(); fitCover(); draw(); syncSliders(); };
       panel.querySelector("#ctr").onclick = () => { push(); st.photo.x = PW / 2; st.photo.y = PH / 2; draw(); };
       panel.querySelector("#r90").onclick = () => { push(); st.photo.rot = ((st.photo.rot + 90 + 180) % 360) - 180; draw(); syncSliders(); };
+      const cb = panel.querySelector("#cut"), ub = panel.querySelector("#uncut");
+      if(cb) cb.onclick = removeBg;
+      if(ub) ub.onclick = () => { img = origImg; cut = false; draw(); renderPanel(); };
     }
   } else if(tool === "text"){
     const t = typeof sel === "number" ? st.texts[sel] : null;
@@ -328,7 +355,7 @@ document.getElementById("confirmBtn").onclick = () => {
     <img src="${thumb}" alt="できあがりイメージ">
     <div><h2>デザインの確認</h2>
       <dl><dt>商品</dt><dd>${esc(P.name)}</dd><dt>機種</dt><dd>${esc(model)}</dd><dt>数量</dt><dd>${qty}個</dd>
-      <dt>文字</dt><dd>${st.texts.length ? st.texts.map(t => esc(t.text)).join("／") : "なし"}</dd>
+      <dt>文字</dt><dd>${st.texts.length ? st.texts.map(t => esc(t.text)).join("／") : "なし"}</dd><dt>背景透過</dt><dd>${cut ? "あり" : "なし"}</dd>
       <dt>金額</dt><dd><b>${yen(P.price * qty)}</b>（税込）</dd></dl>
       <p class="help">画面の色と実際の仕上がりは少し異なることがあります。カメラの穴の部分は印刷されません。</p>
       <div class="act"><button class="btn" type="button" id="toCart">この内容でカートに入れる</button><button class="btn btn-line" type="button" id="back">デザインを直す</button></div>
@@ -340,7 +367,7 @@ document.getElementById("confirmBtn").onclick = () => {
       const r = await api({ action: "uploadPhoto", name: "design.jpg", data: full.split(",")[1] });
       const cart = getCart();
       cart.push({ key: Date.now().toString(36), model, qty, fileId: photoFileId, designFileId: r.fileId, thumb,
-        text: st.texts.map(t => t.text).join("／"), font: st.texts.map(t => (P.fonts.find(f => f.id === t.font) || {}).label).join("／"),
+        cut, text: st.texts.map(t => t.text).join("／"), font: st.texts.map(t => (P.fonts.find(f => f.id === t.font) || {}).label).join("／"),
         color: st.texts.map(t => (P.colors.find(c => c.hex === t.color) || { label: t.color }).label).join("／") });
       setCart(cart); location.href = "cart.html?added=1";
     }catch(err){ document.getElementById("mdState").textContent = err.message; e.target.disabled = false; }
