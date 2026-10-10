@@ -148,7 +148,7 @@ function shell(){
     <section class="summary" id="summary"></section>
     <nav class="tabs"><button class="tab" id="t-board">${CAFE?"受付状況":"製造ボード"}</button><button class="tab" id="t-pay">${CAFE?"今週のお振込み":"入金チェック"}<span class="cnt" id="payCnt">0</span></button><button class="tab" id="t-all">すべての注文</button></nav>
     <section id="v-board"><div class="chips" id="chips" style="margin-bottom:12px"></div><div class="list" id="cards"></div></section>
-    <section id="v-pay" hidden><div class="paybar" style="margin-bottom:12px"><span>${CAFE?"カフェで受け付けた分は<b id='pd'></b>にまとめてLICOへお振込みください。お振込みを確認した日から14日で納品します。":"カフェ受付分は<b id='pd'></b>にまとめて入金。確認した日から14日後が納期になります。"}</span>
+    <section id="v-pay" hidden><div class="paybar" style="margin-bottom:12px"><span>${CAFE?"カフェで受け付けた分は<b id='pd'></b>にまとめてLICOへお振込みください。お振込みを確認した日から1か月で納品します。":"カフェ受付分は<b id='pd'></b>にまとめて入金。確認した日から1か月後が納期になります。"}</span>
       <select id="paySel" aria-label="入金日" ${CAFE?"hidden":""}>${WD.map((w,i)=>`<option value="${i}">毎週${w}曜</option>`).join("")}</select></div><div id="payList" style="display:flex;flex-direction:column;gap:10px"></div></section>
     <section id="v-all" hidden><div class="search" style="margin-bottom:12px"><input id="q" type="search" placeholder="お名前・注文番号・機種・カフェ名で探す">
       <select id="fs"><option value="">すべての状態</option>${ALL.map(s=>`<option>${s}</option>`).join("")}</select></div>
@@ -201,7 +201,7 @@ function card(o){
     <div class="tags">${tags}</div>
     <ul class="items">${String(o["注文内容"]||"").split(NL).map(l=>`<li>${esc(l)}</li>`).join("")}</ul>
     ${ids.length?`<div class="photos">${ids.map(id=>`<a href="https://drive.google.com/file/d/${id}/view" target="_blank" rel="noopener"><img src="https://drive.google.com/thumbnail?id=${id}&sz=w200" alt="できあがり画像・写真"></a>`).join("")}</div>`:""}
-    <div class="meta"><span>納期 ${dueStr(o)?md(dueStr(o)):"入金確認から14日"}</span><span>${esc(o["電話"])}</span></div>
+    <div class="meta"><span>納期 ${dueStr(o)?md(dueStr(o)):"入金確認から1か月"}</span><span>${esc(o["電話"])}</span></div>
     <div class="acts">${btn}<button class="edit" data-edit="${esc(o["注文番号"])}">詳細</button></div>
   </article>`;
 }
@@ -233,7 +233,7 @@ function openDetail(no){
       <dt>受け取り</dt><dd>${esc(o["受取方法"])}${o["住所"]?`${NL}〒${esc(o["郵便番号"])} ${esc(o["住所"])}`:""}</dd><dt>注文内容</dt><dd>${esc(o["注文内容"])}</dd>
       <dt>金額</dt><dd>${yen(o["小計"])}＋送料${yen(o["送料"])}＝${yen(o["合計"])}</dd><dt>ご要望</dt><dd>${esc(o["お客様のご要望"])||"—"}</dd>
       <dt>写真</dt><dd>${ids.length?ids.map((id,i)=>`<a href="https://drive.google.com/file/d/${id}/view" target="_blank" rel="noopener">写真${i+1}を開く</a>`).join("　"):"LINEで受け取り"}${o.folderId?`　<a href="https://drive.google.com/drive/folders/${o.folderId}" target="_blank" rel="noopener">フォルダ</a>`:""}</dd></dl>
-    ${CAFE?`<p style="margin:0">状態：<b>${esc(o["状態"])}</b>　納期：${dueStr(o)?md(dueStr(o)):"お振込みの確認から14日"}</p><div class="sheet-a"><button class="btn" type="button" id="dc">閉じる</button></div></form></div>`:`<div class="grid2"><div class="f"><label for="d-st">状態</label><select id="d-st">${ALL.map(s=>`<option ${s===o["状態"]?"selected":""}>${s}</option>`).join("")}</select></div>
+    ${CAFE?`<p style="margin:0">状態：<b>${esc(o["状態"])}</b>　納期：${dueStr(o)?md(dueStr(o)):"お振込みの確認から1か月"}</p><div class="sheet-a"><button class="btn" type="button" id="dc">閉じる</button></div></form></div>`:`<div class="grid2"><div class="f"><label for="d-st">状態</label><select id="d-st">${ALL.map(s=>`<option ${s===o["状態"]?"selected":""}>${s}</option>`).join("")}</select></div>
       <div class="f"><label for="d-due">納期</label><input type="date" id="d-due" value="${esc(dueStr(o))}"></div></div>
     <div class="grid2"><div class="f"><label for="d-as">担当</label><input id="d-as" value="${esc(o["担当"])}"></div>
       <div class="f"><label for="d-ph">写真の受け取り</label><select id="d-ph"><option ${o["写真受領"]==="はい"?"selected":""}>はい</option><option ${o["写真受領"]!=="はい"?"selected":""}>いいえ</option></select></div></div>
