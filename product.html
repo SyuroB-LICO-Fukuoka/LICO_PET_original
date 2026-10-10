@@ -53,9 +53,8 @@
             <img class="pv" id="photoPv" alt="選んだ写真" hidden>
             <span class="state" id="photoState"></span>
           </div>
-          <label class="check"><input type="checkbox" id="later"> 写真はあとでLINEで送る</label>
           <span class="help">スマホの写真をそのまま選べます。明るく、ピントの合った写真がおすすめです。</span>
-          <span class="err" id="e-photo" hidden>写真を選ぶか、「あとでLINEで送る」にチェックしてください。</span>
+          <span class="err" id="e-photo" hidden>写真を選んでください。写真の送信が終わるまでお待ちください。</span>
         </div>
 
         <div class="fld" id="f-text">
@@ -94,7 +93,7 @@
 一覧にない機種は、LINEでお問い合わせください。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
     <div class="c-item" id="c2"><h3>2. 写真をアップロード</h3><p>ケースいっぱいに写真を入れます。縦長の写真がいちばんきれいに収まります。
 カメラの穴の部分は写真が隠れるので、大切な部分は中央あたりにくる写真がおすすめです。
-写真があとになる場合は「写真はあとでLINEで送る」にチェックを入れてください。写真が届いてから製作を始めます。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
+写真はご注文のその場でアップロードしていただきます（あとから送ることはできません）。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
     <div class="c-item" id="c3"><h3>3. お名前・メッセージ</h3><p>ケースの下のほうに文字を入れられます。お名前、日付、短いメッセージなど自由にどうぞ。
 入れない場合は空欄のままで大丈夫です。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
     <div class="c-item" id="c4"><h3>4. 書体を選ぶ</h3><p>和文3種類・英文2種類からお選びいただけます。英文書体を選んだときは、ローマ字で入力してください。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
@@ -143,7 +142,7 @@
 
   /* CUSTOM ORDER の一覧（入力済みは「✓」） */
   function renderSteps(){
-    const done = [!!st.model, !!(st.fileId||st.later), !!st.text, true, true];
+    const done = [!!st.model, !!st.fileId, !!st.text, true, true];
     const labels = ["機種を選ぶ","写真をアップロード","お名前・メッセージ","書体を選ぶ","文字の色を選ぶ"];
     $("#steps").innerHTML = labels.map((l,i)=>`<li><span class="no en">CUSTOM ${i+1}</span><a href="#c${i+1}">${l}</a>${done[i]&&i<3?`<span class="done">✓</span>`:""}</li>`).join("");
   }
@@ -167,7 +166,6 @@
   });
 
   $("#model").addEventListener("change", e=>{ st.model=e.target.value; $("#e-model").hidden=true; renderSteps(); });
-  $("#later").addEventListener("change", e=>{ st.later=e.target.checked; if(st.later) $("#e-photo").hidden=true; renderSteps(); });
 
   /* 数量と合計（数量を変えると自動で計算） */
   function renderSum(){ $("#qty").textContent=st.qty; $("#sum").innerHTML=`${yen(P.price*st.qty)}<small>（${yen(P.price)} × ${st.qty}個）</small>`; $("#priceBar").textContent=`${yen(P.price*st.qty)}（税込）`; }
@@ -207,12 +205,12 @@
     e.preventDefault();
     let ok = true;
     if(!st.model){ $("#e-model").hidden=false; ok=false; }
-    if(!st.fileId && !st.later){ $("#e-photo").hidden=false; ok=false; }
+    if(!st.fileId){ $("#e-photo").hidden=false; ok=false; }
     if(width(st.text)>20){ $("#e-text").hidden=false; ok=false; }
     if(!ok){ document.querySelector(".err:not([hidden])").closest(".fld").scrollIntoView({behavior:"smooth",block:"center"}); return; }
     const f = P.fonts.find(x=>x.id===st.font), c = P.colors.find(x=>x.id===st.color);
     const cart = getCart();
-    cart.push({ key: Date.now().toString(36), model: st.model, fileId: st.fileId, later: !st.fileId, thumb: st.thumb,
+    cart.push({ key: Date.now().toString(36), model: st.model, fileId: st.fileId, thumb: st.thumb,
       text: st.text, font: st.text ? f.label : "", fontId: st.font, color: st.text ? c.label : "", qty: st.qty });
     setCart(cart);
     location.href = "cart.html?added=1";

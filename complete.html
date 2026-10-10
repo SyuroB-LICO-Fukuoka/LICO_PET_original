@@ -25,7 +25,7 @@
   chrome();
   const order = qs.get("order") || "", sid = qs.get("session_id") || "";
   const box = document.getElementById("box"), ttl = document.getElementById("ttl");
-  const line = `<p>写真を「あとでLINEで送る」を選んだ方は、注文番号を添えてLINE（${esc(S.LINE_ID)}）でお送りください。</p><a class="btn btn-line" href="${esc(S.LINE_URL)}" target="_blank" rel="noopener">LINEを開く</a>`;
+  const line = `<p>ご不明な点は、注文番号を添えてLINE（${esc(S.LINE_ID)}）でお問い合わせください。</p>`;
 
   if(isCafe()){
     setCart([]);

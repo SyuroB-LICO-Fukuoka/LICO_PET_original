@@ -42,11 +42,11 @@
     <div class="cart-grid">
       <section>
         ${cart.map(i=>`<div class="ci">
-          ${i.thumb?`<img src="${i.thumb}" alt="選んだ写真">`:`<div class="noimg">写真は<br>LINEで送付</div>`}
+          ${i.thumb?`<img src="${i.thumb}" alt="選んだ写真">`:`<div class="noimg">写真<br>なし</div>`}
           <div>
             <div class="name">${esc(P.name)}</div>
             <dl><dt>機種</dt><dd>${esc(i.model)}</dd>
-              <dt>写真</dt><dd>${i.later?"あとでLINEで送る":"アップロード済み"}</dd>
+              <dt>写真</dt><dd>${i.fileId?"アップロード済み":"未送信（削除して入れ直してください）"}</dd>
               <dt>文字</dt><dd>${i.text?`${esc(i.text)}（${esc(i.font)}・${esc(i.color)}）`:"なし"}</dd></dl>
             <div class="row">
               <div class="qty"><button type="button" data-dec="${i.key}" aria-label="1つ減らす">−</button><output>${i.qty}</output><button type="button" data-inc="${i.key}" aria-label="1つ増やす">＋</button></div>
@@ -122,7 +122,7 @@
     try{
       const cart = getCart();
       const r = await api({ action:"createOrder", mode: cafe?"cafe":"online", cafeId: cafeId(),
-        items: cart.map(i=>({model:i.model, fileId:i.fileId, later:i.later, text:i.text, font:i.font, color:i.color, qty:i.qty})),
+        items: cart.map(i=>({model:i.model, fileId:i.fileId, text:i.text, font:i.font, color:i.color, qty:i.qty})),
         customer: {name:f.name, kana:f.kana, tel:f.tel, email:f.email, zip:f.zip, address:f.address, note:f.note},
         delivery: f.delivery });
       if(r.checkoutUrl){ location.href = r.checkoutUrl; return; }
