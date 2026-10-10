@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>写真でつくるオリジナルiPhoneケース｜LICO PET original</title>
+<meta name="description" content="お気に入りの写真でつくる、世界にひとつのiPhoneケース。写真をアップロードして、機種・お名前・書体を選ぶだけで注文できます。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&family=Zen+Maru+Gothic:wght@500&family=Shippori+Mincho:wght@600&family=Yomogi&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div class="price-bar" id="priceBar"></div>
+
+<main class="wrap">
+  <div class="p-head">
+    <p class="series en" id="pSeries"></p>
+    <h1 id="pName"></h1>
+    <p class="price" id="pPrice"></p>
+  </div>
+
+  <div class="p-main">
+    <!-- 左：見本写真とケースのプレビュー -->
+    <div class="p-media">
+      <div class="p-main-img" id="mainImg"></div>
+      <div class="thumbs" id="thumbs"></div>
+      <p class="mock-cap">「できあがりイメージ」は目安です。実際の色味や写真の位置は少し変わることがあります。</p>
+    </div>
+
+    <!-- 右：注文の入力 -->
+    <div class="p-info">
+      <p class="p-lead" id="pLead"></p>
+      <p class="p-note" id="pNote"></p>
+
+      <p class="co-title">CUSTOM ORDER</p>
+      <ol class="steps" id="steps"></ol>
+
+      <form class="form-panel" id="orderForm" novalidate>
+        <div class="fld" id="f-model">
+          <label for="model">機種を選ぶ<span class="req">必須</span></label>
+          <select id="model"><option value="">選んでください</option></select>
+          <span class="err" id="e-model" hidden>機種を選んでください。</span>
+        </div>
+
+        <div class="fld" id="f-photo">
+          <span class="lbl">写真をアップロード<span class="req">必須</span></span>
+          <div class="upload">
+            <label class="pick"><input type="file" id="photo" accept="image/*">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>
+              写真を選ぶ</label>
+            <img class="pv" id="photoPv" alt="選んだ写真" hidden>
+            <span class="state" id="photoState"></span>
+          </div>
+          <label class="check"><input type="checkbox" id="later"> 写真はあとでLINEで送る</label>
+          <span class="help">スマホの写真をそのまま選べます。明るく、ピントの合った写真がおすすめです。</span>
+          <span class="err" id="e-photo" hidden>写真を選ぶか、「あとでLINEで送る」にチェックしてください。</span>
+        </div>
+
+        <div class="fld" id="f-text">
+          <label for="text">お名前・メッセージ<span class="opt">任意</span></label>
+          <input type="text" id="text" maxlength="20" placeholder="例：MOMO / もも">
+          <span class="help" id="textCount">全角10文字・半角20文字まで</span>
+          <span class="err" id="e-text" hidden>文字数が多すぎます。全角10文字・半角20文字までにしてください。</span>
+        </div>
+
+        <div class="fld" id="f-font">
+          <span class="lbl">書体を選ぶ</span>
+          <div class="swatches" id="fonts"></div>
+        </div>
+
+        <div class="fld" id="f-color">
+          <span class="lbl">文字の色を選ぶ</span>
+          <div class="swatches" id="colors"></div>
+        </div>
+
+        <div class="fld">
+          <span class="lbl">数量</span>
+          <div class="qty"><button type="button" id="minus" aria-label="1つ減らす">−</button><output id="qty">1</output><button type="button" id="plus" aria-label="1つ増やす">＋</button></div>
+        </div>
+
+        <div class="sum-row"><span>合計（税込）</span><span class="v" id="sum"></span></div>
+        <p class="ship-note" id="shipNote"></p>
+        <button class="btn btn-block" type="submit" id="addBtn">カートに入れる</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 各ステップの説明 -->
+  <section class="c-list" id="clist">
+    <h2>CUSTOM LIST</h2>
+    <div class="c-item" id="c1"><h3>1. 機種を選ぶ</h3><p>お使いのiPhoneの機種をお選びください。機種名は「設定」→「一般」→「情報」で確認できます。
+一覧にない機種は、LINEでお問い合わせください。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
+    <div class="c-item" id="c2"><h3>2. 写真をアップロード</h3><p>ケースいっぱいに写真を入れます。縦長の写真がいちばんきれいに収まります。
+カメラの穴の部分は写真が隠れるので、大切な部分は中央あたりにくる写真がおすすめです。
+写真があとになる場合は「写真はあとでLINEで送る」にチェックを入れてください。写真が届いてから製作を始めます。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
+    <div class="c-item" id="c3"><h3>3. お名前・メッセージ</h3><p>ケースの下のほうに文字を入れられます。お名前、日付、短いメッセージなど自由にどうぞ。
+入れない場合は空欄のままで大丈夫です。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
+    <div class="c-item" id="c4"><h3>4. 書体を選ぶ</h3><p>和文3種類・英文2種類からお選びいただけます。英文書体を選んだときは、ローマ字で入力してください。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
+    <div class="c-item" id="c5"><h3>5. 文字の色を選ぶ</h3><p>写真の色に合わせて、読みやすい色をお選びください。迷ったときは、明るい写真には「ブラック」、暗い写真には「ホワイト」がおすすめです。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
+  </section>
+
+  <section class="faq" id="faq"><h2>FAQ</h2><div id="faqList"></div></section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script>
+(() => {
+  const {S, yen, esc, getCart, setCart, api, loadImage, toJpeg, toast, chrome} = window.LICO;
+  const P = S.PRODUCT;
+  chrome();
+
+  const st = { model:"", fileId:"", thumb:"", full:"", later:false, text:"", font:P.fonts[0].id, color:P.colors[0].id, qty:1, uploading:false };
+  const $ = s => document.querySelector(s);
+
+  /* 商品の基本情報 */
+  $("#pSeries").textContent = P.series;
+  $("#pName").textContent = P.name;
+  $("#pPrice").innerHTML = `${yen(P.price)}<small>（税込）</small>`;
+  $("#pLead").textContent = P.lead;
+  $("#pNote").textContent = P.note;
+  $("#shipNote").textContent = P.shipNote;
+  $("#model").insertAdjacentHTML("beforeend", P.models.map(m=>`<option>${esc(m)}</option>`).join(""));
+  $("#faqList").innerHTML = P.faq.map(f=>`<details><summary>Q. ${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("");
+
+  /* 左の画像：1枚目はできあがりイメージ、その後に見本写真 */
+  let view = 0;
+  function renderMedia(){
+    const items = ["mock", ...P.images];
+    $("#thumbs").innerHTML = items.map((it,i)=>`<button type="button" data-i="${i}" aria-current="${i===view}" aria-label="${i?"見本写真":"できあがりイメージ"}">${i? `<img src="${esc(it)}" alt="">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#777">イメージ</div>`}</button>`).join("");
+    if(view===0){
+      const f = P.fonts.find(x=>x.id===st.font), c = P.colors.find(x=>x.id===st.color);
+      $("#mainImg").innerHTML = `<div class="mock">${st.full||st.thumb?`<img src="${st.full||st.thumb}" alt="選んだ写真">`:`<div class="empty">写真を選ぶと、ここにできあがりイメージが出ます</div>`}<div class="cam"></div>${st.text?`<div class="txt" style="font-family:${f.family};color:${c.hex}">${esc(st.text)}</div>`:""}</div>`;
+    } else {
+      $("#mainImg").innerHTML = `<img src="${esc(items[view])}" alt="見本写真" style="width:100%;height:100%;object-fit:cover">`;
+    }
+  }
+  $("#thumbs").addEventListener("click", e=>{ const b=e.target.closest("button"); if(b){ view=+b.dataset.i; renderMedia(); } });
+
+  /* CUSTOM ORDER の一覧（入力済みは「✓」） */
+  function renderSteps(){
+    const done = [!!st.model, !!(st.fileId||st.later), !!st.text, true, true];
+    const labels = ["機種を選ぶ","写真をアップロード","お名前・メッセージ","書体を選ぶ","文字の色を選ぶ"];
+    $("#steps").innerHTML = labels.map((l,i)=>`<li><span class="no en">CUSTOM ${i+1}</span><a href="#c${i+1}">${l}</a>${done[i]&&i<3?`<span class="done">✓</span>`:""}</li>`).join("");
+  }
+
+  /* 書体・色の選択 */
+  function renderSwatches(){
+    $("#fonts").innerHTML = P.fonts.map(f=>`<button type="button" data-font="${f.id}" aria-pressed="${f.id===st.font}"><span class="s" style="font-family:${f.family}">${esc(st.text||f.sample).slice(0,6)}</span>${esc(f.label)}</button>`).join("");
+    $("#colors").innerHTML = P.colors.map(c=>`<button type="button" data-color="${c.id}" aria-pressed="${c.id===st.color}"><span class="dot" style="background:${c.hex}"></span>${esc(c.label)}</button>`).join("");
+  }
+  $("#fonts").addEventListener("click", e=>{ const b=e.target.closest("button"); if(b){ st.font=b.dataset.font; renderSwatches(); view=0; renderMedia(); } });
+  $("#colors").addEventListener("click", e=>{ const b=e.target.closest("button"); if(b){ st.color=b.dataset.color; renderSwatches(); view=0; renderMedia(); } });
+
+  /* 文字数（全角は2、半角は1と数えて20まで） */
+  const width = s => [...s].reduce((a,ch)=>a+(ch.match(/[ -~｡-ﾟ]/)?1:2),0);
+  $("#text").addEventListener("input", e=>{
+    st.text = e.target.value.trim();
+    const w = width(st.text);
+    $("#textCount").textContent = `${w}/20（全角は2、半角は1と数えます）`;
+    $("#e-text").hidden = w<=20;
+    renderSwatches(); renderSteps(); view=0; renderMedia();
+  });
+
+  $("#model").addEventListener("change", e=>{ st.model=e.target.value; $("#e-model").hidden=true; renderSteps(); });
+  $("#later").addEventListener("change", e=>{ st.later=e.target.checked; if(st.later) $("#e-photo").hidden=true; renderSteps(); });
+
+  /* 数量と合計（数量を変えると自動で計算） */
+  function renderSum(){ $("#qty").textContent=st.qty; $("#sum").innerHTML=`${yen(P.price*st.qty)}<small>（${yen(P.price)} × ${st.qty}個）</small>`; $("#priceBar").textContent=`${yen(P.price*st.qty)}（税込）`; }
+  $("#minus").onclick=()=>{ if(st.qty>1){ st.qty--; renderSum(); } };
+  $("#plus").onclick=()=>{ if(st.qty<20){ st.qty++; renderSum(); } };
+
+  /* 写真のアップロード（選んだ時点で送っておく） */
+  $("#photo").addEventListener("change", async e=>{
+    const file = e.target.files[0]; if(!file) return;
+    $("#e-photo").hidden = true;
+    st.uploading = true; $("#addBtn").disabled = true;
+    $("#photoState").textContent = "写真を準備しています…";
+    try{
+      const im = await loadImage(file);
+      st.thumb = toJpeg(im, 360, .8);
+      st.full = toJpeg(im, 1200, .85);
+      $("#photoPv").src = st.thumb; $("#photoPv").hidden = false;
+      view = 0; renderMedia();
+      const big = toJpeg(im, 2400, .9);
+      $("#photoState").textContent = "写真を送っています…";
+      try{
+        const r = await api({action:"uploadPhoto", name:file.name, data: big.split(",")[1]});
+        st.fileId = r.fileId;
+        $("#photoState").textContent = "写真を受け付けました";
+      }catch(err){
+        st.fileId = "";
+        $("#photoState").textContent = err.message;
+      }
+    }catch(err){
+      $("#photoState").textContent = err.message;
+    }
+    st.uploading = false; $("#addBtn").disabled = false; renderSteps();
+  });
+
+  /* カートに入れる */
+  $("#orderForm").addEventListener("submit", e=>{
+    e.preventDefault();
+    let ok = true;
+    if(!st.model){ $("#e-model").hidden=false; ok=false; }
+    if(!st.fileId && !st.later){ $("#e-photo").hidden=false; ok=false; }
+    if(width(st.text)>20){ $("#e-text").hidden=false; ok=false; }
+    if(!ok){ document.querySelector(".err:not([hidden])").closest(".fld").scrollIntoView({behavior:"smooth",block:"center"}); return; }
+    const f = P.fonts.find(x=>x.id===st.font), c = P.colors.find(x=>x.id===st.color);
+    const cart = getCart();
+    cart.push({ key: Date.now().toString(36), model: st.model, fileId: st.fileId, later: !st.fileId, thumb: st.thumb,
+      text: st.text, font: st.text ? f.label : "", fontId: st.font, color: st.text ? c.label : "", qty: st.qty });
+    setCart(cart);
+    location.href = "cart.html?added=1";
+  });
+
+  /* スクロールしたら上に金額を出す */
+  const io = new IntersectionObserver(([en])=>$("#priceBar").classList.toggle("show", !en.isIntersecting));
+  io.observe($("#pPrice"));
+
+  renderSteps(); renderSwatches(); renderSum(); renderMedia();
+})();
+</script>
+</body>
+</html>

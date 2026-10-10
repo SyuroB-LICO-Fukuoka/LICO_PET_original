@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://syurob-lico-fukuoka.github.io/LICO_PET_original/sitemap.xml

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>カート・ご注文手続き｜LICO PET original</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap">
+  <div class="page-title"><span class="en">CART</span><h1>ご注文手続き</h1></div>
+  <div id="root"></div>
+</main>
+<div id="site-footer"></div>
+
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script>
+(() => {
+  const {S, yen, esc, isCafe, cafeId, getCart, setCart, subtotal, shipping, api, toast, chrome, qs} = window.LICO;
+  const P = S.PRODUCT;
+  chrome();
+  const cafe = isCafe();
+  const f = { name:"", kana:"", email:"", tel:"", delivery: cafe ? "pickup" : "ship", zip:"", address:"", note:"", agree:false };
+  const $ = s => document.querySelector(s);
+  if(qs.get("added")) setTimeout(()=>toast("カートに入れました"),100);
+
+  function render(){
+    const cart = getCart();
+    if(!cart.length){
+      $("#root").innerHTML = `<div class="empty-cart"><p>カートは空です。</p><a class="btn" href="product.html">商品を見る</a></div>`;
+      return;
+    }
+    const sub = subtotal(), ship = shipping(f.delivery), total = sub + ship;
+    $("#root").innerHTML = `
+    ${qs.get("canceled")?`<p class="alert" style="margin-bottom:20px">お支払いが完了していません。内容をご確認のうえ、もう一度お手続きください。</p>`:""}
+    <div class="cart-grid">
+      <section>
+        ${cart.map(i=>`<div class="ci">
+          ${i.thumb?`<img src="${i.thumb}" alt="選んだ写真">`:`<div class="noimg">写真は<br>LINEで送付</div>`}
+          <div>
+            <div class="name">${esc(P.name)}</div>
+            <dl><dt>機種</dt><dd>${esc(i.model)}</dd>
+              <dt>写真</dt><dd>${i.later?"あとでLINEで送る":"アップロード済み"}</dd>
+              <dt>文字</dt><dd>${i.text?`${esc(i.text)}（${esc(i.font)}・${esc(i.color)}）`:"なし"}</dd></dl>
+            <div class="row">
+              <div class="qty"><button type="button" data-dec="${i.key}" aria-label="1つ減らす">−</button><output>${i.qty}</output><button type="button" data-inc="${i.key}" aria-label="1つ増やす">＋</button></div>
+              <span class="amt">${yen(P.price*i.qty)}</span>
+              <button class="rm" type="button" data-rm="${i.key}">削除</button>
+            </div>
+          </div>
+        </div>`).join("")}
+        <p style="margin-top:16px"><a href="product.html" style="text-decoration:underline;font-size:14px">＋ 別の写真でもうひとつ作る</a></p>
+      </section>
+
+      <form class="box" id="frm" novalidate>
+        <h2>お客様の情報</h2>
+        ${cafe?`<p class="info">店頭受付です。お支払いは毎週まとめて店頭でお願いします。入金を確認してから製作を始めます。</p>`:""}
+        <div class="grid2">
+          <div class="fld"><label for="c-name">お名前<span class="req">必須</span></label><input type="text" id="c-name" autocomplete="name" value="${esc(f.name)}"></div>
+          <div class="fld"><label for="c-kana">フリガナ<span class="req">必須</span></label><input type="text" id="c-kana" value="${esc(f.kana)}"></div>
+        </div>
+        <div class="grid2">
+          <div class="fld"><label for="c-tel">電話番号<span class="req">必須</span></label><input type="tel" id="c-tel" autocomplete="tel" inputmode="tel" value="${esc(f.tel)}"></div>
+          <div class="fld"><label for="c-email">メールアドレス${cafe?`<span class="opt">任意</span>`:`<span class="req">必須</span>`}</label><input type="email" id="c-email" autocomplete="email" value="${esc(f.email)}"></div>
+        </div>
+        ${cafe?"":`<div class="fld"><span class="lbl">受け取り方法</span><div class="seg">
+          <button type="button" data-dl="ship" aria-pressed="${f.delivery==="ship"}">配送</button>
+          <button type="button" data-dl="pickup" aria-pressed="${f.delivery==="pickup"}">店頭で受け取る</button></div></div>`}
+        ${f.delivery==="ship"?`<div class="grid2">
+          <div class="fld"><label for="c-zip">郵便番号<span class="req">必須</span></label><input type="text" id="c-zip" inputmode="numeric" autocomplete="postal-code" placeholder="819-0161" value="${esc(f.zip)}"></div>
+          <div class="fld" style="grid-column:1/-1"><label for="c-addr">住所<span class="req">必須</span></label><input type="text" id="c-addr" autocomplete="street-address" value="${esc(f.address)}"></div>
+        </div>`:(cafe?`<p class="info">受け取り場所：ご注文いただいたカフェ。できあがり次第ご連絡します。</p>`:`<p class="info">受け取り場所：店頭（福岡市西区今宿東1丁目19-14）。できあがり次第ご連絡します。</p>`)}
+        <div class="fld"><label for="c-note">ご要望など<span class="opt">任意</span></label><textarea id="c-note" rows="3" placeholder="写真の向きや、文字の位置のご希望など">${esc(f.note)}</textarea></div>
+        <div class="totals">
+          <div><span>商品小計（${cart.reduce((a,i)=>a+i.qty,0)}個）</span><span>${yen(sub)}</span></div>
+          <div><span>送料</span><span>${ship?yen(ship):"無料"}</span></div>
+          <div class="grand"><span>合計（税込）</span><span>${yen(total)}</span></div>
+        </div>
+        <label class="check"><input type="checkbox" id="c-agree" ${f.agree?"checked":""}> <span><a href="tokushoho.html" target="_blank" style="text-decoration:underline">特定商取引法に基づく表記</a>と<a href="tokushoho.html#privacy" target="_blank" style="text-decoration:underline">プライバシーポリシー</a>に同意します</span></label>
+        <div id="msg"></div>
+        <button class="btn btn-block" type="submit" id="go">${cafe?"この内容で受け付ける":"カード決済へ進む"}</button>
+        ${cafe?"":`<p class="p-note" style="text-align:center">次の画面で、カード情報を安全に入力していただきます（Stripe）。</p>`}
+      </form>
+    </div>`;
+  }
+
+  function pull(){
+    const v = id => { const el=document.getElementById(id); return el ? el.value.trim() : ""; };
+    f.name=v("c-name"); f.kana=v("c-kana"); f.tel=v("c-tel"); f.email=v("c-email"); f.note=document.getElementById("c-note")?.value||"";
+    if(document.getElementById("c-zip")){ f.zip=v("c-zip"); f.address=v("c-addr"); }
+    f.agree=!!document.getElementById("c-agree")?.checked;
+  }
+
+  document.addEventListener("click", e=>{
+    const t = e.target.closest("button"); if(!t) return;
+    const cart = getCart();
+    const it = k => cart.find(i=>i.key===k);
+    if(t.dataset.inc){ pull(); const i=it(t.dataset.inc); if(i && i.qty<20){ i.qty++; setCart(cart); render(); } }
+    if(t.dataset.dec){ pull(); const i=it(t.dataset.dec); if(i && i.qty>1){ i.qty--; setCart(cart); render(); } }
+    if(t.dataset.rm){ pull(); setCart(cart.filter(i=>i.key!==t.dataset.rm)); render(); }
+    if(t.dataset.dl){ pull(); f.delivery=t.dataset.dl; render(); }
+  });
+
+  document.addEventListener("submit", async e=>{
+    if(e.target.id!=="frm") return;
+    e.preventDefault(); pull();
+    const errs = [];
+    if(!f.name) errs.push("お名前");
+    if(!f.kana) errs.push("フリガナ");
+    if(!/^[0-9０-９\-－ ]{10,14}$/.test(f.tel)) errs.push("電話番号（数字で）");
+    if(!cafe && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) errs.push("メールアドレス");
+    if(f.delivery==="ship" && (!f.zip || !f.address)) errs.push("郵便番号と住所");
+    if(!f.agree) errs.push("同意のチェック");
+    if(errs.length){ $("#msg").innerHTML=`<p class="alert">入力してください：${errs.join("、")}</p>`; return; }
+    const go = $("#go"); go.disabled = true; go.textContent = "送信しています…";
+    try{
+      const cart = getCart();
+      const r = await api({ action:"createOrder", mode: cafe?"cafe":"online", cafeId: cafeId(),
+        items: cart.map(i=>({model:i.model, fileId:i.fileId, later:i.later, text:i.text, font:i.font, color:i.color, qty:i.qty})),
+        customer: {name:f.name, kana:f.kana, tel:f.tel, email:f.email, zip:f.zip, address:f.address, note:f.note},
+        delivery: f.delivery });
+      if(r.checkoutUrl){ location.href = r.checkoutUrl; return; }
+      setCart([]);
+      location.href = "complete.html?order=" + encodeURIComponent(r.orderNo);
+    }catch(err){
+      $("#msg").innerHTML = `<p class="alert">${esc(err.message)}</p>`;
+      go.disabled = false; go.textContent = cafe?"この内容で受け付ける":"カード決済へ進む";
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
