@@ -146,9 +146,9 @@ function shell(){
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="reload">最新にする</button>
       <a class="btn" id="shopLink">お客様の注文画面</a><a class="btn" id="sheetLink" target="_blank" rel="noopener">注文データ</a><a class="btn btn-main" id="cafeLink">＋ 注文を受け付ける（受付画面へ）</a><button class="btn" id="logout">ログアウト</button></div></header>
     <section class="summary" id="summary"></section>
-    <nav class="tabs"><button class="tab" id="t-board">${CAFE?"受付状況":"製造ボード"}</button><button class="tab" id="t-pay">${CAFE?"今週のご入金":"入金チェック"}<span class="cnt" id="payCnt">0</span></button><button class="tab" id="t-all">すべての注文</button></nav>
+    <nav class="tabs"><button class="tab" id="t-board">${CAFE?"受付状況":"製造ボード"}</button><button class="tab" id="t-pay">${CAFE?"今週のお振込み":"入金チェック"}<span class="cnt" id="payCnt">0</span></button><button class="tab" id="t-all">すべての注文</button></nav>
     <section id="v-board"><div class="chips" id="chips" style="margin-bottom:12px"></div><div class="list" id="cards"></div></section>
-    <section id="v-pay" hidden><div class="paybar" style="margin-bottom:12px"><span>${CAFE?"カフェで受け付けた分は<b id='pd'></b>にまとめてLICOへご入金ください。入金が確認できた注文から製作を始めます。":"カフェ受付分は<b id='pd'></b>にまとめて入金。確認した注文から製造に回ります。"}</span>
+    <section id="v-pay" hidden><div class="paybar" style="margin-bottom:12px"><span>${CAFE?"カフェで受け付けた分は<b id='pd'></b>にまとめてLICOへお振込みください。お振込みを確認した日から14日で納品します。":"カフェ受付分は<b id='pd'></b>にまとめて入金。確認した日から14日後が納期になります。"}</span>
       <select id="paySel" aria-label="入金日" ${CAFE?"hidden":""}>${WD.map((w,i)=>`<option value="${i}">毎週${w}曜</option>`).join("")}</select></div><div id="payList" style="display:flex;flex-direction:column;gap:10px"></div></section>
     <section id="v-all" hidden><div class="search" style="margin-bottom:12px"><input id="q" type="search" placeholder="お名前・注文番号・機種・カフェ名で探す">
       <select id="fs"><option value="">すべての状態</option>${ALL.map(s=>`<option>${s}</option>`).join("")}</select></div>
@@ -169,7 +169,7 @@ function render(){
   ["board","pay","all"].forEach(v=>{ $("#v-"+v).hidden = v!==view; $("#t-"+v).setAttribute("aria-selected", v===view); });
   const unpaid = orders.filter(o=>o["状態"]==="入金待ち");
   const late = orders.filter(isLate).length;
-  $("#summary").innerHTML = (CAFE ? [["ご入金待ち",unpaid.length,unpaid.length?"warn":""],["LICOで製作中",orders.filter(o=>["製造待ち","製作中","検品・梱包"].includes(o["状態"])).length,""],["お渡しできます",orders.filter(o=>o["状態"]==="お渡し・発送待ち").length,""],["お渡し済み",orders.filter(o=>o["状態"]==="完了").length,""]] : [["入金待ち（カフェ）",unpaid.length,unpaid.length?"warn":""],["製造待ち",orders.filter(o=>o["状態"]==="製造待ち").length,""],
+  $("#summary").innerHTML = (CAFE ? [["お振込みが必要",unpaid.length,unpaid.length?"warn":""],["LICOで製作中",orders.filter(o=>["製造待ち","製作中","検品・梱包"].includes(o["状態"])).length,""],["お渡しできます",orders.filter(o=>o["状態"]==="お渡し・発送待ち").length,""],["お渡し済み",orders.filter(o=>o["状態"]==="完了").length,""]] : [["入金待ち（カフェ）",unpaid.length,unpaid.length?"warn":""],["製造待ち",orders.filter(o=>o["状態"]==="製造待ち").length,""],
     ["製作・検品中",orders.filter(o=>["製作中","検品・梱包"].includes(o["状態"])).length,""],["お渡し・発送待ち",orders.filter(o=>o["状態"]==="お渡し・発送待ち").length,""],
     ["納期を過ぎている",late,late?"late":""]]).map(([k,v,c])=>`<div class="stat ${c}"><span class="k">${k}</span><span class="v">${v}</span></div>`).join("");
   $("#payCnt").textContent = unpaid.length; $("#pd").textContent = `毎週${WD[payDay]}曜`; $("#paySel").value = payDay;
@@ -192,7 +192,7 @@ function card(o){
     isLate(o)?`<span class="tag late">納期超過</span>`:isSoon(o)?`<span class="tag warn">納期まで${daysLeft(o)}日</span>`:""].join("");
   const ids = photoIds(o);
   let btn = "";
-  if(CAFE){ btn = s==="お渡し・発送待ち" ? `<button class="go" data-next="${esc(o["注文番号"])}">お客様に渡した</button>` : `<span class="tag" style="align-self:center">${esc(s==="入金待ち"?"ご入金待ち":["製造待ち","製作中","検品・梱包"].includes(s)?"LICOで製作中":s)}</span>`; }
+  if(CAFE){ btn = s==="お渡し・発送待ち" ? `<button class="go" data-next="${esc(o["注文番号"])}">お客様に渡した</button>` : `<span class="tag" style="align-self:center">${esc(s==="入金待ち"?"お振込みが必要":["製造待ち","製作中","検品・梱包"].includes(s)?"LICOで製作中":s)}</span>`; }
   else if(s==="製造待ち" && noPhoto) btn = `<button class="go" data-recv="${esc(o["注文番号"])}">写真を受け取った</button>`;
   else if(s==="お渡し・発送待ち") btn = `<button class="go" data-next="${esc(o["注文番号"])}">${o["受取方法"]==="配送"?"発送した":o["受付"]==="カフェ"?"カフェでお渡し済み":"お渡しした"}</button>`;
   else if(ACTION[s]) btn = `<button class="go" data-next="${esc(o["注文番号"])}">${ACTION[s]}</button>`;
@@ -201,7 +201,7 @@ function card(o){
     <div class="tags">${tags}</div>
     <ul class="items">${String(o["注文内容"]||"").split(NL).map(l=>`<li>${esc(l)}</li>`).join("")}</ul>
     ${ids.length?`<div class="photos">${ids.map(id=>`<a href="https://drive.google.com/file/d/${id}/view" target="_blank" rel="noopener"><img src="https://drive.google.com/thumbnail?id=${id}&sz=w200" alt="できあがり画像・写真"></a>`).join("")}</div>`:""}
-    <div class="meta"><span>納期 ${md(dueStr(o))}</span><span>${esc(o["電話"])}</span></div>
+    <div class="meta"><span>納期 ${dueStr(o)?md(dueStr(o)):"入金確認から14日"}</span><span>${esc(o["電話"])}</span></div>
     <div class="acts">${btn}<button class="edit" data-edit="${esc(o["注文番号"])}">詳細</button></div>
   </article>`;
 }
@@ -213,8 +213,8 @@ function renderPay(){
   $("#payList").innerHTML = keys.length ? keys.map(k=>{ const os=g[k], sum=os.reduce((a,o)=>a+Number(o["合計"]||0),0);
     return `<div class="payrow"><div class="payrow-h"><div><div class="who">${CAFE?esc(os[0]["お名前"])+" 様":esc(k)}</div><div class="no">${CAFE?esc(os[0]["電話"]):os.length+"件の注文"}</div></div><div class="num" style="font-size:18px">${yen(sum)}</div></div>
       <ul class="items">${os.map(o=>`<li>${esc(o["注文番号"])}｜${esc(o["お名前"])} 様｜${o["数量"]}個｜${yen(o["合計"])}</li>`).join("")}</ul>
-      ${CAFE?"":`<div class="acts"><button class="go" data-pay="${esc(os.map(o=>o["注文番号"]).join(","))}">${os.length}件 ${yen(sum)} の入金を確認した</button></div>`}</div>`; }).join("") + (CAFE&&keys.length?`<div class="paybar"><span>今週のご入金の合計</span><b class="num">${yen(orders.filter(o=>o["状態"]==="入金待ち").reduce((a,o)=>a+Number(o["合計"]||0),0))}</b></div>`:"")
-    : `<div class="empty">入金待ちの注文はありません。</div>`;
+      ${CAFE?"":`<div class="acts"><button class="go" data-pay="${esc(os.map(o=>o["注文番号"]).join(","))}">${os.length}件 ${yen(sum)} の入金を確認した</button></div>`}</div>`; }).join("") + (CAFE&&keys.length?`<div class="paybar"><span>今週お振込みいただく合計</span><b class="num">${yen(orders.filter(o=>o["状態"]==="入金待ち").reduce((a,o)=>a+Number(o["合計"]||0),0))}</b></div>`:"")
+    : `<div class="empty">${CAFE?"お振込みが必要な注文はありません。":"入金待ちの注文はありません。"}</div>`;
 }
 
 function renderAll(){
@@ -233,7 +233,7 @@ function openDetail(no){
       <dt>受け取り</dt><dd>${esc(o["受取方法"])}${o["住所"]?`${NL}〒${esc(o["郵便番号"])} ${esc(o["住所"])}`:""}</dd><dt>注文内容</dt><dd>${esc(o["注文内容"])}</dd>
       <dt>金額</dt><dd>${yen(o["小計"])}＋送料${yen(o["送料"])}＝${yen(o["合計"])}</dd><dt>ご要望</dt><dd>${esc(o["お客様のご要望"])||"—"}</dd>
       <dt>写真</dt><dd>${ids.length?ids.map((id,i)=>`<a href="https://drive.google.com/file/d/${id}/view" target="_blank" rel="noopener">写真${i+1}を開く</a>`).join("　"):"LINEで受け取り"}${o.folderId?`　<a href="https://drive.google.com/drive/folders/${o.folderId}" target="_blank" rel="noopener">フォルダ</a>`:""}</dd></dl>
-    ${CAFE?`<p style="margin:0">状態：<b>${esc(o["状態"])}</b>　納期：${md(dueStr(o))}</p><div class="sheet-a"><button class="btn" type="button" id="dc">閉じる</button></div></form></div>`:`<div class="grid2"><div class="f"><label for="d-st">状態</label><select id="d-st">${ALL.map(s=>`<option ${s===o["状態"]?"selected":""}>${s}</option>`).join("")}</select></div>
+    ${CAFE?`<p style="margin:0">状態：<b>${esc(o["状態"])}</b>　納期：${dueStr(o)?md(dueStr(o)):"お振込みの確認から14日"}</p><div class="sheet-a"><button class="btn" type="button" id="dc">閉じる</button></div></form></div>`:`<div class="grid2"><div class="f"><label for="d-st">状態</label><select id="d-st">${ALL.map(s=>`<option ${s===o["状態"]?"selected":""}>${s}</option>`).join("")}</select></div>
       <div class="f"><label for="d-due">納期</label><input type="date" id="d-due" value="${esc(dueStr(o))}"></div></div>
     <div class="grid2"><div class="f"><label for="d-as">担当</label><input id="d-as" value="${esc(o["担当"])}"></div>
       <div class="f"><label for="d-ph">写真の受け取り</label><select id="d-ph"><option ${o["写真受領"]==="はい"?"selected":""}>はい</option><option ${o["写真受領"]!=="はい"?"selected":""}>いいえ</option></select></div></div>
