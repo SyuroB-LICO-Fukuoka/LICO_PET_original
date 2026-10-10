@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&family=Zen+Maru+Gothic:wght@500&family=Shippori+Mincho:wght@600&family=Yomogi&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+Rounded+1c:wght@800&family=Noto+Serif+JP:wght@700&family=Shippori+Mincho:wght@600&family=Klee+One:wght@600&family=Yomogi&family=Kaisei+Decol:wght@700&family=Dancing+Script:wght@600&family=Great+Vibes&family=Pacifico&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shop.css">
 <style>
 /* 編集画面：左に道具の切り替え、その隣に道具パネル、中央にケース */
@@ -43,7 +43,7 @@ body{display:flex;flex-direction:column;background:#f1f0ed}
 .swatch button[aria-pressed="true"]{outline:2px solid var(--text);outline-offset:2px}
 .swatch.bg100{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
 .swatch.bg100 button{width:100%;height:auto;aspect-ratio:1}
-#bgFree{width:100%;height:40px;border:1px solid #d6d3cc;padding:2px;cursor:pointer}
+#bgFree,.free{width:100%;height:40px;border:1px solid #d6d3cc;padding:2px;cursor:pointer}
 .layers{display:flex;flex-direction:column;gap:6px}
 .layers button{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:#fff;padding:9px 10px;font-size:13px;cursor:pointer;text-align:left}
 .layers button[aria-pressed="true"]{border-color:var(--text);background:#f7f6f3}
@@ -148,7 +148,7 @@ function paint(c, s, forPrint){
   st.texts.forEach(t => {
     const f = P.fonts.find(x => x.id === t.font) || P.fonts[0];
     c.save(); c.translate(t.x * s, t.y * s); c.rotate((t.rot || 0) * Math.PI / 180);
-    c.font = `${t.size * s}px ${f.family}`; c.fillStyle = t.color; c.textAlign = "center"; c.textBaseline = "middle";
+    c.font = `${f.weight || 400} ${t.size * s}px ${f.family}`; c.fillStyle = t.color; c.textAlign = "center"; c.textBaseline = "middle";
     if(t.shadow){ c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = 8 * s; }
     c.fillText(t.text, 0, 0); c.restore();
   });
@@ -166,7 +166,7 @@ function bounds(which){
   const t = st.texts[which];
   if(typeof which === "number" && t){
     const f = P.fonts.find(x => x.id === t.font) || P.fonts[0];
-    ctx.save(); ctx.font = `${t.size}px ${f.family}`; const w = ctx.measureText(t.text).width; ctx.restore();
+    ctx.save(); ctx.font = `${f.weight || 400} ${t.size}px ${f.family}`; const w = ctx.measureText(t.text).width; ctx.restore();
     return { x: t.x, y: t.y, w: Math.max(w, 40) + 20, h: t.size * 1.3, rot: t.rot || 0 };
   }
   return null;
@@ -265,7 +265,7 @@ async function removeBg(){
 let tool = "photo";
 document.querySelectorAll(".rail button").forEach(b => b.onclick = () => { tool = b.dataset.tool; document.querySelectorAll(".rail button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderPanel(); });
 const panel = document.getElementById("panel");
-const fontOpts = id => P.fonts.map(f => `<option value="${f.id}" ${f.id === id ? "selected" : ""}>${esc(f.label)}</option>`).join("");
+const fontOpts = id => P.fonts.map(f => `<option value="${f.id}" ${f.id === id ? "selected" : ""} style="font-family:${f.family.replace(/"/g, "")};font-weight:${f.weight || 400}">${esc(f.label)}</option>`).join("");
 // 背景色：白〜黒8色＋ナチュラル8色＋14色相×6段階＝100色
 const BG = (() => {
   const hex = (h, s, l) => { s /= 100; l /= 100; const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
@@ -277,6 +277,9 @@ const BG = (() => {
     [[85, 93], [80, 84], [75, 74], [65, 60], [60, 45], [55, 32]].forEach(([s, l]) => out.push(hex(h, s, l))));
   return out;
 })();
+// 文字の色：名前つきの色＋背景と同じ100色（重複はのぞく）
+const TC = [...P.colors.map(c => c.hex), ...BG.filter(h => !P.colors.some(c => c.hex === h))];
+const colorName = h => (P.colors.find(c => c.hex === h) || {}).label || "カラーコード " + h;
 
 function renderPanel(){
   if(tool === "photo"){
@@ -311,7 +314,8 @@ function renderPanel(){
       <button class="tile" type="button" id="addT"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h14M12 6v13M9 19h6"/></svg>文字を追加する</button>
       ${t ? `<div class="row"><label for="tx">文字（全角10文字まで）</label><input type="text" id="tx" maxlength="20" value="${esc(t.text)}"></div>
       <div class="row"><label for="tf">書体</label><select id="tf">${fontOpts(t.font)}</select></div>
-      <div class="row"><label>文字の色</label><div class="swatch" id="tc">${P.colors.map(c => `<button type="button" data-c="${c.hex}" aria-pressed="${c.hex === t.color}" style="background:${c.hex}" aria-label="${esc(c.label)}"></button>`).join("")}</div></div>
+      <div class="row"><label>文字の色：<b>${esc(colorName(t.color))}</b></label><div class="swatch bg100" id="tc">${TC.map(h => `<button type="button" data-c="${h}" aria-pressed="${h === t.color}" style="background:${h}" aria-label="${esc(colorName(h))}" title="${esc(colorName(h))}"></button>`).join("")}</div>
+        <label for="tcFree">ほかの色を自由に選ぶ</label><input type="color" id="tcFree" class="free" value="${t.color}"></div>
       <div class="row"><label for="ts">大きさ</label><input type="range" id="ts" min="40" max="320" value="${t.size}"></div>
       <div class="row"><label for="tr">回転</label><input type="range" id="tr" min="-90" max="90" value="${t.rot || 0}"></div>
       <label class="check"><input type="checkbox" id="tsh" ${t.shadow ? "checked" : ""}> 影をつける（写真の上で読みやすく）</label>
@@ -319,7 +323,7 @@ function renderPanel(){
       <p class="help">文字は指やマウスでドラッグして動かせます。</p>` : `<p class="help">お名前や日付、短いメッセージを入れられます（入れなくても作れます）。</p>`}`;
     panel.querySelector("#addT").onclick = () => {
       if(st.texts.length >= 3){ toast("文字は3つまで入れられます"); return; }
-      push(); st.texts.push({ text: "MOMO", font: P.fonts[3].id, color: "#ffffff", size: 150, x: PW / 2, y: PH * .82, rot: 0, shadow: true });
+      push(); st.texts.push({ text: "MOMO", font: "dancing", color: "#ffffff", size: 150, x: PW / 2, y: PH * .82, rot: 0, shadow: true });
       sel = st.texts.length - 1; draw(); renderPanel();
     };
     if(t){
@@ -329,6 +333,7 @@ function renderPanel(){
       tx.oninput = () => { const w = [...tx.value].reduce((a, ch) => a + (/[ -~｡-ﾟ]/.test(ch) ? 1 : 2), 0); if(w > 20){ tx.value = st.texts[i].text; return; } st.texts[i].text = tx.value; draw(); };
       panel.querySelector("#tf").onchange = e => { push(); st.texts[i].font = e.target.value; draw(); };
       panel.querySelectorAll("#tc button").forEach(b => b.onclick = () => { push(); st.texts[i].color = b.dataset.c; draw(); renderPanel(); });
+      panel.querySelector("#tcFree").onchange = e => { push(); st.texts[i].color = e.target.value; draw(); renderPanel(); };
       const ts = panel.querySelector("#ts"), tr = panel.querySelector("#tr");
       ts.onpointerdown = tr.onpointerdown = () => push();
       ts.oninput = () => { st.texts[i].size = +ts.value; draw(); };
@@ -383,7 +388,7 @@ document.getElementById("confirmBtn").onclick = () => {
       const cart = getCart();
       cart.push({ key: Date.now().toString(36), model, qty, fileId: photoFileId, designFileId: r.fileId, thumb,
         cut, text: st.texts.map(t => t.text).join("／"), font: st.texts.map(t => (P.fonts.find(f => f.id === t.font) || {}).label).join("／"),
-        color: st.texts.map(t => (P.colors.find(c => c.hex === t.color) || { label: t.color }).label).join("／") });
+        color: st.texts.map(t => colorName(t.color)).join("／") });
       setCart(cart); location.href = "cart.html?added=1";
     }catch(err){ document.getElementById("mdState").textContent = err.message; e.target.disabled = false; }
   };

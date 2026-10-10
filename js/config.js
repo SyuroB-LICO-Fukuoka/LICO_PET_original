@@ -29,18 +29,38 @@ window.LICO_SHOP = {
       "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13", "iPhone 13 mini",
       "iPhone SE（第2・第3世代）"
     ],
+    // 書体：label は印刷のときに探せる正式な書体名（すべて無料・商用利用OKのGoogle Fonts）
     fonts: [
-      { id: "maru",   label: "和文書体1", family: "'Zen Maru Gothic', sans-serif", sample: "もも" },
-      { id: "mincho", label: "和文書体2", family: "'Shippori Mincho', serif",       sample: "もも" },
-      { id: "hand",   label: "和文書体3", family: "'Yomogi', cursive",              sample: "もも" },
-      { id: "script", label: "英文書体4", family: "'Dancing Script', cursive",      sample: "Momo" },
-      { id: "sans",   label: "英文書体5", family: "'Jost', sans-serif",             sample: "MOMO" }
+      { id: "notosans",  label: "Noto Sans JP（ゴシック）",           family: "'Noto Sans JP', sans-serif",      weight: 700 },
+      { id: "zenmaru",   label: "Zen Maru Gothic（丸ゴシック）",       family: "'Zen Maru Gothic', sans-serif",   weight: 700 },
+      { id: "mplusr",    label: "M PLUS Rounded 1c（丸ゴシック）",     family: "'M PLUS Rounded 1c', sans-serif", weight: 800 },
+      { id: "notoserif", label: "Noto Serif JP（明朝）",               family: "'Noto Serif JP', serif",          weight: 700 },
+      { id: "shippori",  label: "Shippori Mincho（しっぽり明朝）",     family: "'Shippori Mincho', serif",        weight: 600 },
+      { id: "klee",      label: "Klee One（クレー・手書き風）",         family: "'Klee One', cursive",             weight: 600 },
+      { id: "yomogi",    label: "Yomogi（よもぎ・手書き風）",           family: "'Yomogi', cursive",               weight: 400 },
+      { id: "kaisei",    label: "Kaisei Decol（解星デコール）",         family: "'Kaisei Decol', serif",           weight: 700 },
+      { id: "dancing",   label: "Dancing Script（英字・筆記体）",       family: "'Dancing Script', cursive",       weight: 600 },
+      { id: "greatv",    label: "Great Vibes（英字・筆記体）",          family: "'Great Vibes', cursive",          weight: 400 },
+      { id: "pacifico",  label: "Pacifico（英字・ポップ）",             family: "'Pacifico', cursive",             weight: 400 },
+      { id: "playfair",  label: "Playfair Display（英字・クラシック）", family: "'Playfair Display', serif",       weight: 700 },
+      { id: "jost",      label: "Jost（英字・シンプル）",               family: "'Jost', sans-serif",              weight: 500 }
     ],
+    // よく使う文字の色（名前つき）。このほかに100色と自由選択がある
     colors: [
       { id: "white", label: "ホワイト", hex: "#ffffff" },
       { id: "black", label: "ブラック", hex: "#1b1b1b" },
       { id: "gold",  label: "ゴールド", hex: "#c9a24a" },
-      { id: "pink",  label: "ピンク",   hex: "#e58fa8" }
+      { id: "silver",label: "シルバー", hex: "#a8a9ad" },
+      { id: "pink",  label: "ピンク",   hex: "#e58fa8" },
+      { id: "red",   label: "レッド",   hex: "#d7263d" },
+      { id: "orange",label: "オレンジ", hex: "#f08a24" },
+      { id: "yellow",label: "イエロー", hex: "#f4c430" },
+      { id: "green", label: "グリーン", hex: "#3a9d5d" },
+      { id: "sky",   label: "水色",     hex: "#5bb8e6" },
+      { id: "navy",  label: "ネイビー", hex: "#1f3a68" },
+      { id: "purple",label: "パープル", hex: "#8a5cc2" },
+      { id: "brown", label: "ブラウン", hex: "#7a5c43" },
+      { id: "beige", label: "ベージュ", hex: "#d8c3a5" }
     ],
     shipNote: "ご注文（お支払い）の確認後、1か月ほどで発送します。\n店頭受け取りの場合は、できあがり次第ご連絡します。",
     faq: [
