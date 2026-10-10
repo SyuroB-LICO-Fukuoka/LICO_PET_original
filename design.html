@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>デザインする｜LICO PET original</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&family=Zen+Maru+Gothic:wght@500&family=Shippori+Mincho:wght@600&family=Yomogi&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shop.css">
+<style>
+/* 編集画面：左に道具の切り替え、その隣に道具パネル、中央にケース */
+html,body{height:100%}
+body{display:flex;flex-direction:column;background:#f1f0ed}
+.ed-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line)}
+.ed-top .logo{font-size:16px}
+.ed-top .model{font-size:13px;color:var(--sub)}
+.ed-top .go{background:var(--text);color:#fff;border:0;padding:10px 20px;font-size:14px;cursor:pointer;letter-spacing:.06em}
+.ed-top .go:hover{background:var(--accent)}
+.ed{flex:1;display:grid;grid-template-columns:72px 280px 1fr;min-height:0}
+.rail{background:#2b2b2b;display:flex;flex-direction:column;padding-top:8px}
+.rail button{background:none;border:0;color:#bbb;padding:12px 4px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.rail button svg{width:24px;height:24px}
+.rail button[aria-pressed="true"]{color:#fff;background:#3d3d3d}
+.panel{background:#fff;border-right:1px solid var(--line);padding:18px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.panel h2{font-size:15px}
+.panel .help{font-size:12px;color:var(--sub)}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:#fff;padding:22px 10px;cursor:pointer;font-size:14px;border-radius:6px;position:relative}
+.tile:hover{border-color:var(--text)}
+.tile svg{width:34px;height:34px;color:var(--accent)}
+.tile input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.row{display:flex;flex-direction:column;gap:6px}
+.row label{font-size:12px;color:var(--sub)}
+.row input[type=range]{width:100%}
+.row input[type=text],.row select{border:1px solid #d6d3cc;padding:9px;font-size:14px;width:100%;background:#fff}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btns button{border:1px solid #d6d3cc;background:#fff;padding:8px 10px;font-size:12px;cursor:pointer}
+.btns button:hover{border-color:var(--text)}
+.btns .danger{color:var(--danger)}
+.swatch{display:flex;flex-wrap:wrap;gap:6px}
+.swatch button{width:28px;height:28px;border-radius:50%;border:1px solid #bbb;cursor:pointer}
+.swatch button[aria-pressed="true"]{outline:2px solid var(--text);outline-offset:2px}
+.layers{display:flex;flex-direction:column;gap:6px}
+.layers button{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:#fff;padding:9px 10px;font-size:13px;cursor:pointer;text-align:left}
+.layers button[aria-pressed="true"]{border-color:var(--text);background:#f7f6f3}
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;min-width:0;position:relative}
+.tools{position:absolute;top:12px;left:16px;display:flex;gap:6px}
+.tools button{border:1px solid var(--line);background:#fff;padding:6px 10px;font-size:12px;cursor:pointer}
+.tools button:disabled{opacity:.4;cursor:default}
+canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 170px);cursor:grab;filter:drop-shadow(0 10px 24px rgba(0,0,0,.15))}
+.note{font-size:11px;color:var(--sub);text-align:center}
+.state{font-size:12px}
+/* 確認画面 */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}
+.modal .box{background:#fff;max-width:760px;width:100%;max-height:calc(100vh - 32px);overflow:auto;padding:24px;display:grid;gap:24px}
+@media(min-width:700px){.modal .box{grid-template-columns:240px 1fr}}
+.modal img{width:100%;border-radius:22px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.modal h2{font-size:18px;margin-bottom:8px}
+.modal dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:10px 0}
+.modal dt{color:var(--sub)}
+.modal .act{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+/* スマホ：道具を下に */
+@media(max-width:820px){
+  .ed{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+  .rail{flex-direction:row;justify-content:space-around;padding:0;order:3}
+  .rail button{flex:1;padding:8px 2px}
+  .panel{order:2;border-right:0;border-top:1px solid var(--line);max-height:38vh}
+  .stage{order:1;padding:10px}
+  canvas#cv{max-height:46vh}
+}
+</style>
+</head>
+<body>
+<div class="ed-top">
+  <a href="product.html" class="logo">LICO PET original</a>
+  <span class="model" id="modelLabel"></span>
+  <button class="go" id="confirmBtn" type="button">デザインの確認</button>
+</div>
+<div id="cafeBar"></div>
+<div class="ed">
+  <nav class="rail" aria-label="道具">
+    <button type="button" data-tool="photo" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>写真</button>
+    <button type="button" data-tool="text" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h14M12 6v13M9 19h6"/></svg>テキスト</button>
+    <button type="button" data-tool="bg" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l7 7-7 7-7-7z"/><path d="M19 15c0 1.5 1 2.5 1 3.5a1 1 0 0 1-2 0c0-1 1-2 1-3.5z"/></svg>背景色</button>
+    <button type="button" data-tool="layer" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>レイヤー</button>
+  </nav>
+  <aside class="panel" id="panel"></aside>
+  <main class="stage">
+    <div class="tools">
+      <button type="button" id="undo" disabled>↶ 元に戻す</button>
+      <button type="button" id="redo" disabled>↷ やり直し</button>
+    </div>
+    <canvas id="cv" width="546" height="1056" aria-label="ケースのデザイン"></canvas>
+    <p class="note">ピンクの線の内側がケースになります。カメラの穴の部分は印刷されません。</p>
+  </main>
+</div>
+<div id="modalHost"></div>
+
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script>
+(() => {
+const {S, yen, esc, getCart, setCart, api, loadImage, toJpeg, toast, isCafe, qs} = window.LICO;
+const P = S.PRODUCT;
+
+/* ===== 印刷サイズと表示 =====
+   印刷用：1092 × 2112 px（ケース1枚分）。画面では半分の大きさで表示 */
+const PW = 1092, PH = 2112, VIEW = 0.5;
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const CASE = { r: 150, cam: { x: 60, y: 60, w: 430, h: 470, r: 110 } }; // 角の丸み・カメラの穴（印刷サイズの座標）
+
+const model = qs.get("model") || "", qty = Math.max(1, Math.min(20, parseInt(qs.get("qty")) || 1));
+if(!model){ location.replace("product.html"); return; }
+document.getElementById("modelLabel").textContent = `${model} 対応｜${qty}個`;
+if(isCafe()) document.getElementById("cafeBar").innerHTML = `<div class="mode-bar">店頭受付モード（カフェ）</div>`;
+
+/* ===== デザインの状態 ===== */
+let st = { bg: "#ffffff", photo: null, texts: [] };   // photo: {src, fileId, x, y, scale, rot, w, h}
+let sel = "photo";                                     // 選んでいるもの："photo" または テキストの番号
+let img = null, uploading = false, photoFileId = "";
+const hist = [], future = [];
+const snap = () => JSON.stringify({ bg: st.bg, photo: st.photo && { ...st.photo, src: undefined }, texts: st.texts });
+function push(){ hist.push(snap()); if(hist.length > 60) hist.shift(); future.length = 0; syncUndo(); }
+function restore(json){ const s = JSON.parse(json); st.bg = s.bg; st.texts = s.texts; if(s.photo && st.photo) Object.assign(st.photo, s.photo, { src: st.photo.src }); else if(!s.photo) st.photo = null; draw(); renderPanel(); syncUndo(); }
+function syncUndo(){ document.getElementById("undo").disabled = !hist.length; document.getElementById("redo").disabled = !future.length; }
+document.getElementById("undo").onclick = () => { if(!hist.length) return; future.push(snap()); restore(hist.pop()); };
+document.getElementById("redo").onclick = () => { if(!future.length) return; hist.push(snap()); restore(future.pop()); };
+
+/* ===== 描画 ===== */
+function caseClip(c, s){
+  const r = CASE.r * s; c.beginPath(); c.roundRect(0, 0, PW * s, PH * s, r);
+}
+function camPath(c, s){
+  const k = CASE.cam; c.beginPath(); c.roundRect(k.x * s, k.y * s, k.w * s, k.h * s, k.r * s);
+}
+function paint(c, s, forPrint){
+  c.save(); caseClip(c, s); c.clip();
+  c.fillStyle = st.bg; c.fillRect(0, 0, PW * s, PH * s);
+  if(st.photo && img){
+    const p = st.photo;
+    c.save(); c.translate(p.x * s, p.y * s); c.rotate(p.rot * Math.PI / 180); c.scale(p.scale * s, p.scale * s);
+    c.drawImage(img, -p.w / 2, -p.h / 2, p.w, p.h); c.restore();
+  }
+  st.texts.forEach(t => {
+    const f = P.fonts.find(x => x.id === t.font) || P.fonts[0];
+    c.save(); c.translate(t.x * s, t.y * s); c.rotate((t.rot || 0) * Math.PI / 180);
+    c.font = `${t.size * s}px ${f.family}`; c.fillStyle = t.color; c.textAlign = "center"; c.textBaseline = "middle";
+    if(t.shadow){ c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = 8 * s; }
+    c.fillText(t.text, 0, 0); c.restore();
+  });
+  c.restore();
+  if(!forPrint){
+    c.save(); camPath(c, s); c.fillStyle = "rgba(40,40,40,.78)"; c.fill(); c.restore();          // カメラの穴
+    c.save(); caseClip(c, s); c.lineWidth = 2; c.strokeStyle = "#e5007f"; c.stroke(); c.restore();  // ケースの線
+    // 選んでいるものの枠
+    const b = bounds(sel);
+    if(b){ c.save(); c.translate(b.x * s, b.y * s); c.rotate(b.rot * Math.PI / 180); c.setLineDash([6, 4]); c.strokeStyle = "#1f8fff"; c.lineWidth = 1.5; c.strokeRect(-b.w * s / 2, -b.h * s / 2, b.w * s, b.h * s); c.restore(); }
+  }
+}
+function bounds(which){
+  if(which === "photo" && st.photo && img){ const p = st.photo; return { x: p.x, y: p.y, w: p.w * p.scale, h: p.h * p.scale, rot: p.rot }; }
+  const t = st.texts[which];
+  if(typeof which === "number" && t){
+    const f = P.fonts.find(x => x.id === t.font) || P.fonts[0];
+    ctx.save(); ctx.font = `${t.size}px ${f.family}`; const w = ctx.measureText(t.text).width; ctx.restore();
+    return { x: t.x, y: t.y, w: Math.max(w, 40) + 20, h: t.size * 1.3, rot: t.rot || 0 };
+  }
+  return null;
+}
+function draw(){
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  if(!st.photo){ // 写真がないときの案内
+    paint(ctx, VIEW, false);
+    ctx.save(); ctx.fillStyle = "#8d887e"; ctx.font = "15px 'Noto Sans JP'"; ctx.textAlign = "center";
+    ctx.fillText("左の「写真をえらぶ」から", cv.width / 2, cv.height / 2 - 10); ctx.fillText("写真を入れてください", cv.width / 2, cv.height / 2 + 14); ctx.restore();
+    return;
+  }
+  paint(ctx, VIEW, false);
+}
+
+/* ===== ドラッグ・ピンチで動かす ===== */
+const pts = new Map(); let drag = null;
+function toDesign(e){ const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * PW / r.width, y: (e.clientY - r.top) * PH / r.height }; }
+function hit(pt){
+  for(let i = st.texts.length - 1; i >= 0; i--){ const b = bounds(i); if(Math.abs(pt.x - b.x) < b.w / 2 && Math.abs(pt.y - b.y) < b.h / 2) return i; }
+  return st.photo ? "photo" : null;
+}
+cv.addEventListener("pointerdown", e => {
+  cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, toDesign(e));
+  if(pts.size === 1){
+    const pt = toDesign(e), h = hit(pt); if(h === null) return;
+    if(h !== sel){ sel = h; renderPanel(); }
+    const o = h === "photo" ? st.photo : st.texts[h];
+    drag = { start: pt, ox: o.x, oy: o.y, moved: false };
+  } else if(pts.size === 2 && sel === "photo" && st.photo){
+    const [a, b] = [...pts.values()];
+    drag = { pinch: Math.hypot(a.x - b.x, a.y - b.y), scale: st.photo.scale, ang: Math.atan2(b.y - a.y, b.x - a.x), rot: st.photo.rot, moved: false };
+  }
+  draw();
+});
+cv.addEventListener("pointermove", e => {
+  if(!pts.has(e.pointerId) || !drag) return;
+  pts.set(e.pointerId, toDesign(e));
+  if(!drag.moved){ push(); drag.moved = true; }
+  if(drag.pinch && pts.size === 2){
+    const [a, b] = [...pts.values()];
+    st.photo.scale = Math.max(.05, drag.scale * Math.hypot(a.x - b.x, a.y - b.y) / drag.pinch);
+    st.photo.rot = drag.rot + (Math.atan2(b.y - a.y, b.x - a.x) - drag.ang) * 180 / Math.PI;
+  } else if(!drag.pinch){
+    const pt = toDesign(e), o = sel === "photo" ? st.photo : st.texts[sel];
+    o.x = drag.ox + pt.x - drag.start.x; o.y = drag.oy + pt.y - drag.start.y;
+  }
+  draw(); syncSliders();
+});
+const up = e => { pts.delete(e.pointerId); if(pts.size === 0) drag = null; };
+cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+cv.addEventListener("wheel", e => { if(sel !== "photo" || !st.photo) return; e.preventDefault(); push(); st.photo.scale = Math.max(.05, st.photo.scale * (e.deltaY < 0 ? 1.05 : .95)); draw(); syncSliders(); }, { passive: false });
+
+/* ===== 写真 ===== */
+function fitCover(){ const p = st.photo; p.scale = Math.max(PW / p.w, PH / p.h); p.x = PW / 2; p.y = PH / 2; p.rot = 0; }
+async function onPhoto(file){
+  if(!file) return;
+  uploading = true; setState("写真を準備しています…");
+  try{
+    const im = await loadImage(file);
+    const big = toJpeg(im, 2400, .92);
+    img = new Image(); img.src = big; await img.decode();
+    push();
+    st.photo = { w: img.naturalWidth, h: img.naturalHeight, x: PW / 2, y: PH / 2, scale: 1, rot: 0 };
+    fitCover(); sel = "photo"; draw(); renderPanel();
+    setState("写真を送っています…");
+    const r = await api({ action: "uploadPhoto", name: file.name, data: big.split(",")[1] });
+    photoFileId = r.fileId; setState("写真を受け付けました");
+  }catch(err){ photoFileId = ""; setState(err.message, true); }
+  uploading = false;
+}
+function setState(t, bad){ const el = document.getElementById("photoState"); if(el){ el.textContent = t; el.style.color = bad ? "var(--danger)" : ""; } }
+
+/* ===== 道具パネル ===== */
+let tool = "photo";
+document.querySelectorAll(".rail button").forEach(b => b.onclick = () => { tool = b.dataset.tool; document.querySelectorAll(".rail button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderPanel(); });
+const panel = document.getElementById("panel");
+const fontOpts = id => P.fonts.map(f => `<option value="${f.id}" ${f.id === id ? "selected" : ""}>${esc(f.label)}</option>`).join("");
+const BG = ["#ffffff", "#f6efe4", "#f8d7dd", "#d9ecf7", "#dfeedd", "#fff3b8", "#1b1b1b", "#7a5c43"];
+
+function renderPanel(){
+  if(tool === "photo"){
+    const has = !!st.photo;
+    panel.innerHTML = `<h2>写真・データ</h2>
+      <label class="tile"><input type="file" id="file" accept="image/*"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>${has ? "写真を入れかえる" : "写真をえらぶ"}</label>
+      <p class="state" id="photoState">${photoFileId ? "写真を受け付けました" : ""}</p>
+      <p class="help">写真はこの画面で送信します（あとから送ることはできません）。明るく、ピントの合った写真がきれいに仕上がります。</p>
+      ${has ? `<div class="row"><label for="sc">大きさ</label><input type="range" id="sc" min="5" max="400" value="${Math.round(st.photo.scale * 100)}"></div>
+      <div class="row"><label for="rt">回転</label><input type="range" id="rt" min="-180" max="180" value="${Math.round(st.photo.rot)}"></div>
+      <div class="btns"><button type="button" id="fit">ケース全体に合わせる</button><button type="button" id="ctr">中央にそろえる</button><button type="button" id="r90">90°回す</button></div>
+      <p class="help">写真は指やマウスで動かせます。スマホは2本指で拡大・回転できます。</p>` : ""}`;
+    panel.querySelector("#file").onchange = e => onPhoto(e.target.files[0]);
+    if(has){
+      const sc = panel.querySelector("#sc"), rt = panel.querySelector("#rt");
+      sc.onpointerdown = rt.onpointerdown = () => push();
+      sc.oninput = () => { st.photo.scale = sc.value / 100; draw(); };
+      rt.oninput = () => { st.photo.rot = +rt.value; draw(); };
+      panel.querySelector("#fit").onclick = () => { push(); fitCover(); draw(); syncSliders(); };
+      panel.querySelector("#ctr").onclick = () => { push(); st.photo.x = PW / 2; st.photo.y = PH / 2; draw(); };
+      panel.querySelector("#r90").onclick = () => { push(); st.photo.rot = ((st.photo.rot + 90 + 180) % 360) - 180; draw(); syncSliders(); };
+    }
+  } else if(tool === "text"){
+    const t = typeof sel === "number" ? st.texts[sel] : null;
+    panel.innerHTML = `<h2>テキスト</h2>
+      <button class="tile" type="button" id="addT"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h14M12 6v13M9 19h6"/></svg>文字を追加する</button>
+      ${t ? `<div class="row"><label for="tx">文字（全角10文字まで）</label><input type="text" id="tx" maxlength="20" value="${esc(t.text)}"></div>
+      <div class="row"><label for="tf">書体</label><select id="tf">${fontOpts(t.font)}</select></div>
+      <div class="row"><label>文字の色</label><div class="swatch" id="tc">${P.colors.map(c => `<button type="button" data-c="${c.hex}" aria-pressed="${c.hex === t.color}" style="background:${c.hex}" aria-label="${esc(c.label)}"></button>`).join("")}</div></div>
+      <div class="row"><label for="ts">大きさ</label><input type="range" id="ts" min="40" max="320" value="${t.size}"></div>
+      <div class="row"><label for="tr">回転</label><input type="range" id="tr" min="-90" max="90" value="${t.rot || 0}"></div>
+      <label class="check"><input type="checkbox" id="tsh" ${t.shadow ? "checked" : ""}> 影をつける（写真の上で読みやすく）</label>
+      <div class="btns"><button type="button" id="tdel" class="danger">この文字を消す</button></div>
+      <p class="help">文字は指やマウスでドラッグして動かせます。</p>` : `<p class="help">お名前や日付、短いメッセージを入れられます（入れなくても作れます）。</p>`}`;
+    panel.querySelector("#addT").onclick = () => {
+      if(st.texts.length >= 3){ toast("文字は3つまで入れられます"); return; }
+      push(); st.texts.push({ text: "MOMO", font: P.fonts[3].id, color: "#ffffff", size: 150, x: PW / 2, y: PH * .82, rot: 0, shadow: true });
+      sel = st.texts.length - 1; draw(); renderPanel();
+    };
+    if(t){
+      const i = sel;
+      const tx = panel.querySelector("#tx");
+      tx.onfocus = () => push();
+      tx.oninput = () => { const w = [...tx.value].reduce((a, ch) => a + (/[ -~｡-ﾟ]/.test(ch) ? 1 : 2), 0); if(w > 20){ tx.value = st.texts[i].text; return; } st.texts[i].text = tx.value; draw(); };
+      panel.querySelector("#tf").onchange = e => { push(); st.texts[i].font = e.target.value; draw(); };
+      panel.querySelectorAll("#tc button").forEach(b => b.onclick = () => { push(); st.texts[i].color = b.dataset.c; draw(); renderPanel(); });
+      const ts = panel.querySelector("#ts"), tr = panel.querySelector("#tr");
+      ts.onpointerdown = tr.onpointerdown = () => push();
+      ts.oninput = () => { st.texts[i].size = +ts.value; draw(); };
+      tr.oninput = () => { st.texts[i].rot = +tr.value; draw(); };
+      panel.querySelector("#tsh").onchange = e => { push(); st.texts[i].shadow = e.target.checked; draw(); };
+      panel.querySelector("#tdel").onclick = () => { push(); st.texts.splice(i, 1); sel = st.photo ? "photo" : null; draw(); renderPanel(); };
+    }
+  } else if(tool === "bg"){
+    panel.innerHTML = `<h2>背景色</h2><p class="help">写真がケース全体をおおっていないときに見える色です。</p>
+      <div class="swatch" id="bgs">${BG.map(c => `<button type="button" data-c="${c}" aria-pressed="${c === st.bg}" style="background:${c}"></button>`).join("")}</div>`;
+    panel.querySelectorAll("#bgs button").forEach(b => b.onclick = () => { push(); st.bg = b.dataset.c; draw(); renderPanel(); });
+  } else {
+    panel.innerHTML = `<h2>レイヤー</h2><p class="help">選んだものを動かしたり、文字を直したりできます。</p>
+      <div class="layers">${st.texts.map((t, i) => `<button type="button" data-l="${i}" aria-pressed="${sel === i}">文字：${esc(t.text) || "（空）"}<span>›</span></button>`).reverse().join("")}
+      ${st.photo ? `<button type="button" data-l="photo" aria-pressed="${sel === "photo"}">写真<span>›</span></button>` : ""}</div>`;
+    panel.querySelectorAll("[data-l]").forEach(b => b.onclick = () => {
+      const v = b.dataset.l; sel = v === "photo" ? "photo" : +v; tool = v === "photo" ? "photo" : "text";
+      document.querySelectorAll(".rail button").forEach(x => x.setAttribute("aria-pressed", x.dataset.tool === tool)); draw(); renderPanel();
+    });
+  }
+}
+function syncSliders(){ const sc = document.getElementById("sc"), rt = document.getElementById("rt"); if(sc && st.photo){ sc.value = Math.round(st.photo.scale * 100); rt.value = Math.round(st.photo.rot); } }
+
+/* ===== デザインの確認 → カートへ ===== */
+document.getElementById("confirmBtn").onclick = () => {
+  if(!st.photo){ toast("写真を入れてください"); tool = "photo"; renderPanel(); return; }
+  if(uploading){ toast("写真を送信中です。少しお待ちください"); return; }
+  if(!photoFileId){ toast("写真の送信に失敗しています。写真を選び直してください"); return; }
+  const out = document.createElement("canvas"); out.width = PW; out.height = PH;
+  const oc = out.getContext("2d"); paint(oc, 1, true);
+  const full = out.toDataURL("image/jpeg", .95);
+  const prev = document.createElement("canvas"); prev.width = 273; prev.height = 528;
+  const pc = prev.getContext("2d"); paint(pc, .25, false);
+  const thumb = prev.toDataURL("image/jpeg", .85);
+  const host = document.getElementById("modalHost");
+  host.innerHTML = `<div class="modal" id="md"><div class="box">
+    <img src="${thumb}" alt="できあがりイメージ">
+    <div><h2>デザインの確認</h2>
+      <dl><dt>商品</dt><dd>${esc(P.name)}</dd><dt>機種</dt><dd>${esc(model)}</dd><dt>数量</dt><dd>${qty}個</dd>
+      <dt>文字</dt><dd>${st.texts.length ? st.texts.map(t => esc(t.text)).join("／") : "なし"}</dd>
+      <dt>金額</dt><dd><b>${yen(P.price * qty)}</b>（税込）</dd></dl>
+      <p class="help">画面の色と実際の仕上がりは少し異なることがあります。カメラの穴の部分は印刷されません。</p>
+      <div class="act"><button class="btn" type="button" id="toCart">この内容でカートに入れる</button><button class="btn btn-line" type="button" id="back">デザインを直す</button></div>
+      <p class="state" id="mdState"></p></div></div></div>`;
+  host.querySelector("#back").onclick = () => host.innerHTML = "";
+  host.querySelector("#toCart").onclick = async e => {
+    e.target.disabled = true; document.getElementById("mdState").textContent = "できあがり画像を送っています…";
+    try{
+      const r = await api({ action: "uploadPhoto", name: "design.jpg", data: full.split(",")[1] });
+      const cart = getCart();
+      cart.push({ key: Date.now().toString(36), model, qty, fileId: photoFileId, designFileId: r.fileId, thumb,
+        text: st.texts.map(t => t.text).join("／"), font: st.texts.map(t => (P.fonts.find(f => f.id === t.font) || {}).label).join("／"),
+        color: st.texts.map(t => (P.colors.find(c => c.hex === t.color) || { label: t.color }).label).join("／") });
+      setCart(cart); location.href = "cart.html?added=1";
+    }catch(err){ document.getElementById("mdState").textContent = err.message; e.target.disabled = false; }
+  };
+};
+
+window.LICO.chrome();
+document.fonts && document.fonts.ready.then(draw);
+renderPanel(); draw();
+})();
+</script>
+</body>
+</html>

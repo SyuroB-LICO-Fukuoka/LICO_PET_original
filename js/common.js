@@ -52,7 +52,7 @@
     const head = document.getElementById("site-header");
     if(head){
       head.outerHTML = `
-      ${isCafe()?`<div class="mode-bar">店頭受付モード（カフェ）｜お支払いは毎週まとめて店頭で　<a href="${esc(S.GAS_URL)}?page=cafe" target="_blank" rel="noopener" style="text-decoration:underline;margin-left:8px">受付確認画面へ →</a></div>`:`<div class="notice">${S.SHIPPING_FEE?`送料 全国一律 ${yen(S.SHIPPING_FEE)}`:"送料無料"}｜1点からおつくりします</div>`}
+      ${isCafe()?`<div class="mode-bar">店頭受付モード（カフェ）｜お支払いは毎週まとめて店頭で　<a href="staff.html" style="text-decoration:underline;margin-left:8px">受付確認画面へ →</a></div>`:`<div class="notice">${S.SHIPPING_FEE?`送料 全国一律 ${yen(S.SHIPPING_FEE)}`:"送料無料"}｜1点からおつくりします</div>`}
       <header class="site"><div class="wrap head">
         <a href="index.html" class="logo">${esc(S.SHOP_NAME)}</a>
         <nav class="gnav"><a href="product.html">商品</a><a href="index.html#howto">ご注文の流れ</a><a href="index.html#gift">ギフト</a><a href="index.html#about">私たちについて</a><a href="product.html#faq">よくあるご質問</a></nav>
@@ -65,7 +65,7 @@
         <div class="foot">
           <div><div class="logo">${esc(S.SHOP_NAME)}</div><p style="margin-top:10px;color:#aaa">運営：株式会社かむらっど<br><a href="https://syurob-lico-fukuoka.github.io/syuroB-LICO/" target="_blank" rel="noopener" style="text-decoration:underline">就労継続支援B型 LICO（リコ）</a></p></div>
           <div><h4>ショップ</h4><ul><li><a href="product.html">商品</a></li><li><a href="index.html#howto">ご注文の流れ</a></li><li><a href="cart.html">カート</a></li></ul></div>
-          <div><h4>ご案内</h4><ul><li><a href="tokushoho.html">特定商取引法に基づく表記</a></li><li><a href="tokushoho.html#privacy">プライバシーポリシー</a></li><li><a href="${esc(S.LINE_URL)}" target="_blank" rel="noopener">LINEでお問い合わせ</a></li><li style="margin-top:10px"><a href="${esc(S.GAS_URL)}?page=staff" target="_blank" rel="noopener" style="color:#888;font-size:11px">スタッフ用</a></li></ul></div>
+          <div><h4>ご案内</h4><ul><li><a href="tokushoho.html">特定商取引法に基づく表記</a></li><li><a href="tokushoho.html#privacy">プライバシーポリシー</a></li><li><a href="${esc(S.LINE_URL)}" target="_blank" rel="noopener">LINEでお問い合わせ</a></li><li style="margin-top:10px"><a href="staff.html" style="color:#888;font-size:11px">スタッフ用</a></li></ul></div>
         </div>
         <div class="pay"><span>VISA</span><span>Mastercard</span><span>JCB</span><span>AMEX</span><span>Apple Pay</span><span>Google Pay</span></div>
         <p class="copy">© 2026 ${esc(S.SHOP_NAME)}</p>

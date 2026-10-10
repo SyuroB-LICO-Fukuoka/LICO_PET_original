@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>LICO スタッフ用ページ</title>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{--bg:#f7f8f7;--surface:#fff;--line:#dfe3e1;--fg:#1d2624;--sub:#66716e;--ink:#1f5a52;--ink-soft:#e4efec;
+  --warn:#a35a00;--warn-soft:#fbefdc;--late:#b3261e;--late-soft:#fbe4e2;--r:10px;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;--f-num:"IBM Plex Mono",ui-monospace,monospace}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6;margin:0}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:16px 80px;display:flex;flex-direction:column;gap:18px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top h1{font-size:20px;margin:0}
+.top h1 small{display:block;font-size:12px;color:var(--sub);font-weight:400}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 16px;font-weight:500;text-decoration:none;color:inherit;display:inline-block}
+.btn-main{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.stat .k{font-size:12px;color:var(--sub);display:block}
+.stat .v{font-family:var(--f-num);font-size:24px}
+.stat.warn .v{color:var(--warn)} .stat.late .v{color:var(--late)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{border:0;background:none;padding:10px 14px;font-weight:500;color:var(--sub);border-bottom:2px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--fg);border-color:var(--ink)}
+.tab .cnt{font-family:var(--f-num);font-size:12px;margin-left:6px;background:var(--warn-soft);color:var(--warn);border-radius:999px;padding:1px 7px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip .n{font-family:var(--f-num);margin-left:6px;opacity:.8}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.late{border-color:var(--late)}
+.card-h{display:flex;justify-content:space-between;gap:8px}
+.who{font-weight:700;font-size:16px;overflow-wrap:anywhere}
+.no{font-family:var(--f-num);font-size:12px;color:var(--sub)}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:12px;border-radius:4px;padding:1px 8px;background:var(--ink-soft);color:var(--ink);white-space:nowrap}
+.tag.cafe{background:var(--fg);color:#fff}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.late{background:var(--late-soft);color:var(--late)}
+.items{margin:0;padding:0;list-style:none;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.items li{overflow-wrap:anywhere}
+.photos{display:flex;gap:6px;flex-wrap:wrap}
+.photos a img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.meta{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);gap:8px;flex-wrap:wrap}
+.acts{display:flex;gap:8px}
+.go{flex:1;padding:11px 12px;border-radius:8px;border:0;background:var(--ink);color:#fff;font-weight:700}
+.go:disabled{background:var(--line);color:var(--sub);cursor:not-allowed}
+.edit{padding:11px 14px;border-radius:8px;border:1px solid var(--line);background:none}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:28px 20px;color:var(--sub);text-align:center}
+.paybar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--warn-soft);border-radius:var(--r);padding:12px 16px}
+.payrow{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px}
+.payrow-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.search{display:flex;gap:8px;flex-wrap:wrap}
+.search input,.search select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;flex:1 1 160px;min-width:0}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:720px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--sub);font-weight:500}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--bg)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;justify-content:center;align-items:flex-start;padding:24px 12px;overflow-y:auto;z-index:20}
+.sheet{background:var(--surface);border-radius:14px;width:min(620px,100%);padding:20px;display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font-size:18px}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:4px 12px;font-size:14px}
+.kv dt{color:var(--sub)} .kv dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:12px;color:var(--sub)}
+.f input,.f select,.f textarea{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 10px;width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.sheet-a{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.login{max-width:360px;margin:15vh auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.login input{border:1px solid var(--line);border-radius:8px;padding:12px;font-size:20px;letter-spacing:.3em;text-align:center}
+.err{color:var(--late);font-size:14px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;z-index:30}
+.loading{opacity:.6;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="js/config.js"></script>
+<div id="sheetHost"></div>
+<div id="toastHost"></div>
+<script>window.onerror=function(m,src,l,c){var d=document.createElement("pre");d.style.cssText="color:#b3261e;white-space:pre-wrap;padding:16px";d.textContent="画面の読み込みでエラーが起きました: "+m+"（"+l+"行目）";document.body.prepend(d);};</script>
+<script>
+const PAGE = "auto";   // "lico"＝製造管理／"cafe"＝カフェ受付確認／"auto"＝スタッフ共通の入口（パスコードで自動判定）
+let ROLE = PAGE, CAFE = false, TITLE = "";
+function setRole(r){ ROLE = r; CAFE = r === "cafe"; TITLE = r === "auto" ? "LICO スタッフ用ページ" : (CAFE ? "カフェ 受付確認" : "LICO 製造管理"); }
+setRole(PAGE);
+const NL = String.fromCharCode(10);   // 改行（Googleの表示の仕組みが記号を書き換えるため、記号を使わずに書く）
+const FLOW = ["入金待ち","製造待ち","製作中","検品・梱包","お渡し・発送待ち","完了"];
+const ACTION = {"入金待ち":"入金を確認した","製造待ち":"製作を始める","製作中":"できあがった → 検品へ","検品・梱包":"検品OK"};
+const ALL = ["決済待ち",...FLOW,"キャンセル"];
+const WD = ["日","月","火","水","木","金","土"];
+let pass = "", orders = [], payDay = 5, shopUrl = "", sheetUrl = "", cafeId = "", cafeName = "", view = "board", stageSel = "製造待ち";
+const $ = s => document.querySelector(s);
+const yen = n => "¥" + (Number(n)||0).toLocaleString("ja-JP");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const md = s => { if(!s) return "—"; const d = typeof s==="number" ? new Date(s) : new Date(String(s).slice(0,10)+"T00:00:00"); return `${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`; };
+const dueStr = o => typeof o["納期"]==="number" ? ymd(new Date(o["納期"])) : String(o["納期"]||"").slice(0,10);
+const daysLeft = o => { const s=dueStr(o); return s ? Math.round((new Date(s+"T00:00:00") - new Date(ymd(new Date())+"T00:00:00"))/864e5) : null; };
+const active = o => !["完了","キャンセル","決済待ち"].includes(o["状態"]);
+const isLate = o => active(o) && dueStr(o) && daysLeft(o) < 0;
+const isSoon = o => active(o) && dueStr(o) && daysLeft(o) >= 0 && daysLeft(o) <= 2;
+const photoIds = o => String(o["写真"]||"").split(NL).map(u=>(u.match(new RegExp("/d/([^/]+)"))||[])[1]).filter(Boolean);
+
+function toast(m){ $("#toastHost").innerHTML=`<div class="toast" role="status">${esc(m)}</div>`; clearTimeout(toast.t); toast.t=setTimeout(()=>$("#toastHost").innerHTML="",2200); }
+// Googleの注文の仕組みに問い合わせる（パスコード必須）
+async function call(fn, ...args){
+  document.body.classList.add("loading");
+  try{
+    const res = await fetch(window.LICO_SHOP.GAS_URL, {method:"POST", body: JSON.stringify({action:"admin", fn, pass, args})});
+    const j = await res.json();
+    if(!j.ok) throw new Error(j.error || "うまくいきませんでした");
+    return j.data;
+  }catch(e){ toast(e.message || String(e)); throw e; }
+  finally{ document.body.classList.remove("loading"); }
+}
+function apply(r){ orders=r.orders; payDay=r.payDay; shopUrl=r.shopUrl||shopUrl; sheetUrl=r.sheetUrl||""; cafeId=r.cafeId||""; cafeName=r.cafeName||""; render(); }
+
+/* ログイン */
+function login(){
+  $("#app").innerHTML = `<form class="login" id="lf"><h1 style="font-size:18px;margin:0">${TITLE}</h1>
+    <label for="pw" style="font-size:13px;color:var(--sub)">${ROLE==="auto"?"":CAFE?"カフェ用":"LICO用"}パスコード（6桁）</label>
+    <input id="pw" inputmode="numeric" autocomplete="off" maxlength="6"><div class="err" id="le"></div>
+    <button class="btn btn-main" type="submit">開く</button></form>`;
+  $("#pw").focus();
+  $("#lf").onsubmit = e => { e.preventDefault(); pass=$("#pw").value.trim();
+    call("adminList").then(r=>{ try{sessionStorage.setItem("lico-pass-"+PAGE,pass);}catch(_){}; setRole(r.role); shell(); apply(r); })
+      .catch(err=>{ $("#le").textContent=err.message; }); };
+}
+
+function shell(){
+  $("#app").innerHTML = `<div class="wrap">
+    <header class="top"><h1>${TITLE}<small>${CAFE?"カフェで受け付けた注文の進み具合":"ネット注文・カフェ受付の製造管理"}</small></h1>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="reload">最新にする</button>
+      <a class="btn" id="shopLink">お客様の注文画面</a><a class="btn" id="sheetLink" target="_blank" rel="noopener">注文データ</a><a class="btn btn-main" id="cafeLink">＋ 注文を受け付ける（受付画面へ）</a><button class="btn" id="logout">ログアウト</button></div></header>
+    <section class="summary" id="summary"></section>
+    <nav class="tabs"><button class="tab" id="t-board">${CAFE?"受付状況":"製造ボード"}</button><button class="tab" id="t-pay">${CAFE?"今週のご入金":"入金チェック"}<span class="cnt" id="payCnt">0</span></button><button class="tab" id="t-all">すべての注文</button></nav>
+    <section id="v-board"><div class="chips" id="chips" style="margin-bottom:12px"></div><div class="list" id="cards"></div></section>
+    <section id="v-pay" hidden><div class="paybar" style="margin-bottom:12px"><span>${CAFE?"カフェで受け付けた分は<b id='pd'></b>にまとめてLICOへご入金ください。入金が確認できた注文から製作を始めます。":"カフェ受付分は<b id='pd'></b>にまとめて入金。確認した注文から製造に回ります。"}</span>
+      <select id="paySel" aria-label="入金日" ${CAFE?"hidden":""}>${WD.map((w,i)=>`<option value="${i}">毎週${w}曜</option>`).join("")}</select></div><div id="payList" style="display:flex;flex-direction:column;gap:10px"></div></section>
+    <section id="v-all" hidden><div class="search" style="margin-bottom:12px"><input id="q" type="search" placeholder="お名前・注文番号・機種・カフェ名で探す">
+      <select id="fs"><option value="">すべての状態</option>${ALL.map(s=>`<option>${s}</option>`).join("")}</select></div>
+      <div class="tbl"><table><thead><tr><th>注文番号</th><th>受付日</th><th>受付</th><th>カフェ</th><th>お名前</th><th>数量</th><th>合計</th><th>納期</th><th>状態</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+  </div>`;
+  $("#reload").onclick = ()=>call("adminList").then(apply);
+  $("#logout").onclick = ()=>{ try{sessionStorage.removeItem("lico-pass-"+PAGE);}catch(_){}; pass=""; setRole(PAGE); login(); };
+  ["board","pay","all"].forEach(v=>$("#t-"+v).onclick=()=>{ view=v; render(); });
+  $("#paySel").onchange = e => call("adminSetPayDay", +e.target.value).then(r=>{ apply(r); toast("入金日を変更しました"); });
+  $("#q").oninput = renderAll; $("#fs").onchange = renderAll;
+}
+
+function render(){
+  $("#cafeLink").hidden = !CAFE; $("#cafeLink").href = (shopUrl||"") + "product.html?mode=cafe&cafe=" + encodeURIComponent(cafeId);
+  $("#shopLink").hidden = CAFE; $("#shopLink").href = (shopUrl||"") + "product.html";
+  $("#sheetLink").hidden = CAFE || !sheetUrl; $("#sheetLink").href = sheetUrl;
+  if(CAFE && cafeName){ $(".top h1").firstChild.textContent = cafeName + "　受付確認"; document.title = cafeName + " 受付確認"; }
+  ["board","pay","all"].forEach(v=>{ $("#v-"+v).hidden = v!==view; $("#t-"+v).setAttribute("aria-selected", v===view); });
+  const unpaid = orders.filter(o=>o["状態"]==="入金待ち");
+  const late = orders.filter(isLate).length;
+  $("#summary").innerHTML = (CAFE ? [["ご入金待ち",unpaid.length,unpaid.length?"warn":""],["LICOで製作中",orders.filter(o=>["製造待ち","製作中","検品・梱包"].includes(o["状態"])).length,""],["お渡しできます",orders.filter(o=>o["状態"]==="お渡し・発送待ち").length,""],["お渡し済み",orders.filter(o=>o["状態"]==="完了").length,""]] : [["入金待ち（カフェ）",unpaid.length,unpaid.length?"warn":""],["製造待ち",orders.filter(o=>o["状態"]==="製造待ち").length,""],
+    ["製作・検品中",orders.filter(o=>["製作中","検品・梱包"].includes(o["状態"])).length,""],["お渡し・発送待ち",orders.filter(o=>o["状態"]==="お渡し・発送待ち").length,""],
+    ["納期を過ぎている",late,late?"late":""]]).map(([k,v,c])=>`<div class="stat ${c}"><span class="k">${k}</span><span class="v">${v}</span></div>`).join("");
+  $("#payCnt").textContent = unpaid.length; $("#pd").textContent = `毎週${WD[payDay]}曜`; $("#paySel").value = payDay;
+  if(view==="board") renderBoard(); else if(view==="pay") renderPay(); else renderAll();
+}
+
+function renderBoard(){
+  const cnt = s => orders.filter(o=>o["状態"]===s).length;
+  $("#chips").innerHTML = FLOW.map(s=>`<button class="chip" data-stage="${s}" aria-pressed="${s===stageSel}">${s}<span class="n">${cnt(s)}</span></button>`).join("");
+  let list = orders.filter(o=>o["状態"]===stageSel);
+  list.sort(stageSel==="完了" ? (a,b)=>(b["更新日時"]||0)-(a["更新日時"]||0) : (a,b)=>dueStr(a).localeCompare(dueStr(b)));
+  if(stageSel==="完了") list = list.slice(0,60);
+  $("#cards").innerHTML = list.length ? list.map(card).join("") : `<div class="empty">「${stageSel}」の注文はありません。</div>`;
+}
+
+function card(o){
+  const s=o["状態"], noPhoto = o["写真受領"]!=="はい";
+  const tags = [o["受付"]==="カフェ"?`<span class="tag cafe">${esc(o["カフェ"]||"カフェ")}</span>`:`<span class="tag">ネット・カード決済済み</span>`, `<span class="tag">${esc(o["受取方法"])}</span>`,
+    s!=="入金待ち"&&s!=="完了"&&noPhoto?`<span class="tag warn">写真なし</span>`:"",
+    isLate(o)?`<span class="tag late">納期超過</span>`:isSoon(o)?`<span class="tag warn">納期まで${daysLeft(o)}日</span>`:""].join("");
+  const ids = photoIds(o);
+  let btn = "";
+  if(CAFE){ btn = s==="お渡し・発送待ち" ? `<button class="go" data-next="${esc(o["注文番号"])}">お客様に渡した</button>` : `<span class="tag" style="align-self:center">${esc(s==="入金待ち"?"ご入金待ち":["製造待ち","製作中","検品・梱包"].includes(s)?"LICOで製作中":s)}</span>`; }
+  else if(s==="製造待ち" && noPhoto) btn = `<button class="go" data-recv="${esc(o["注文番号"])}">写真を受け取った</button>`;
+  else if(s==="お渡し・発送待ち") btn = `<button class="go" data-next="${esc(o["注文番号"])}">${o["受取方法"]==="配送"?"発送した":o["受付"]==="カフェ"?"カフェでお渡し済み":"お渡しした"}</button>`;
+  else if(ACTION[s]) btn = `<button class="go" data-next="${esc(o["注文番号"])}">${ACTION[s]}</button>`;
+  return `<article class="card ${isLate(o)?"late":""}">
+    <div class="card-h"><div><div class="who">${esc(o["お名前"])} 様</div><div class="no">${esc(o["注文番号"])}｜${md(o["受付日時"])}受付${o["担当"]?`｜担当 ${esc(o["担当"])}`:""}</div></div><div class="num">${yen(o["合計"])}</div></div>
+    <div class="tags">${tags}</div>
+    <ul class="items">${String(o["注文内容"]||"").split(NL).map(l=>`<li>${esc(l)}</li>`).join("")}</ul>
+    ${ids.length?`<div class="photos">${ids.map(id=>`<a href="https://drive.google.com/file/d/${id}/view" target="_blank" rel="noopener"><img src="https://drive.google.com/thumbnail?id=${id}&sz=w200" alt="できあがり画像・写真"></a>`).join("")}</div>`:""}
+    <div class="meta"><span>納期 ${md(dueStr(o))}</span><span>${esc(o["電話"])}</span></div>
+    <div class="acts">${btn}<button class="edit" data-edit="${esc(o["注文番号"])}">詳細</button></div>
+  </article>`;
+}
+
+function renderPay(){
+  const g = {};
+  orders.filter(o=>o["状態"]==="入金待ち").forEach(o=>{ const k = CAFE ? o["お名前"]+"｜"+o["電話"] : (o["カフェ"]||"カフェ"); (g[k] ||= []).push(o); });
+  const keys = Object.keys(g).sort();
+  $("#payList").innerHTML = keys.length ? keys.map(k=>{ const os=g[k], sum=os.reduce((a,o)=>a+Number(o["合計"]||0),0);
+    return `<div class="payrow"><div class="payrow-h"><div><div class="who">${CAFE?esc(os[0]["お名前"])+" 様":esc(k)}</div><div class="no">${CAFE?esc(os[0]["電話"]):os.length+"件の注文"}</div></div><div class="num" style="font-size:18px">${yen(sum)}</div></div>
+      <ul class="items">${os.map(o=>`<li>${esc(o["注文番号"])}｜${esc(o["お名前"])} 様｜${o["数量"]}個｜${yen(o["合計"])}</li>`).join("")}</ul>
+      ${CAFE?"":`<div class="acts"><button class="go" data-pay="${esc(os.map(o=>o["注文番号"]).join(","))}">${os.length}件 ${yen(sum)} の入金を確認した</button></div>`}</div>`; }).join("") + (CAFE&&keys.length?`<div class="paybar"><span>今週のご入金の合計</span><b class="num">${yen(orders.filter(o=>o["状態"]==="入金待ち").reduce((a,o)=>a+Number(o["合計"]||0),0))}</b></div>`:"")
+    : `<div class="empty">入金待ちの注文はありません。</div>`;
+}
+
+function renderAll(){
+  const q=($("#q").value||"").trim().toLowerCase(), fs=$("#fs").value;
+  const list = orders.filter(o=>(!fs||o["状態"]===fs)&&(!q||[o["注文番号"],o["お名前"],o["フリガナ"],o["注文内容"],o["電話"],o["カフェ"]].join(" ").toLowerCase().includes(q))).sort((a,b)=>b["受付日時"]-a["受付日時"]);
+  $("#rows").innerHTML = list.length ? list.slice(0,300).map(o=>`<tr class="click" data-edit="${esc(o["注文番号"])}"><td class="num">${esc(o["注文番号"])}</td><td>${md(o["受付日時"])}</td><td>${esc(o["受付"])}</td><td>${esc(o["カフェ"])||"—"}</td><td>${esc(o["お名前"])}</td><td>${o["数量"]}</td><td class="num">${yen(o["合計"])}</td><td>${md(dueStr(o))}</td><td>${esc(o["状態"])}</td></tr>`).join("")
+    : `<tr><td colspan="9" style="color:var(--sub)">条件に合う注文はありません。</td></tr>`;
+}
+
+function openDetail(no){
+  const o = orders.find(x=>x["注文番号"]===no); if(!o) return;
+  const ids = photoIds(o);
+  $("#sheetHost").innerHTML = `<div class="overlay" id="ov"><form class="sheet" id="df">
+    <h2>注文 ${esc(no)}</h2>
+    <dl class="kv">${o["カフェ"]?`<dt>受付カフェ</dt><dd>${esc(o["カフェ"])}</dd>`:""}<dt>お名前</dt><dd>${esc(o["お名前"])}（${esc(o["フリガナ"])}）</dd><dt>電話</dt><dd>${esc(o["電話"])}</dd><dt>メール</dt><dd>${esc(o["メール"])||"—"}</dd>
+      <dt>受け取り</dt><dd>${esc(o["受取方法"])}${o["住所"]?`${NL}〒${esc(o["郵便番号"])} ${esc(o["住所"])}`:""}</dd><dt>注文内容</dt><dd>${esc(o["注文内容"])}</dd>
+      <dt>金額</dt><dd>${yen(o["小計"])}＋送料${yen(o["送料"])}＝${yen(o["合計"])}</dd><dt>ご要望</dt><dd>${esc(o["お客様のご要望"])||"—"}</dd>
+      <dt>写真</dt><dd>${ids.length?ids.map((id,i)=>`<a href="https://drive.google.com/file/d/${id}/view" target="_blank" rel="noopener">写真${i+1}を開く</a>`).join("　"):"LINEで受け取り"}${o.folderId?`　<a href="https://drive.google.com/drive/folders/${o.folderId}" target="_blank" rel="noopener">フォルダ</a>`:""}</dd></dl>
+    ${CAFE?`<p style="margin:0">状態：<b>${esc(o["状態"])}</b>　納期：${md(dueStr(o))}</p><div class="sheet-a"><button class="btn" type="button" id="dc">閉じる</button></div></form></div>`:`<div class="grid2"><div class="f"><label for="d-st">状態</label><select id="d-st">${ALL.map(s=>`<option ${s===o["状態"]?"selected":""}>${s}</option>`).join("")}</select></div>
+      <div class="f"><label for="d-due">納期</label><input type="date" id="d-due" value="${esc(dueStr(o))}"></div></div>
+    <div class="grid2"><div class="f"><label for="d-as">担当</label><input id="d-as" value="${esc(o["担当"])}"></div>
+      <div class="f"><label for="d-ph">写真の受け取り</label><select id="d-ph"><option ${o["写真受領"]==="はい"?"selected":""}>はい</option><option ${o["写真受領"]!=="はい"?"selected":""}>いいえ</option></select></div></div>
+    <div class="f"><label for="d-memo">メモ</label><textarea id="d-memo" rows="2">${esc(o["メモ"])}</textarea></div>
+    <div class="sheet-a"><button class="btn" type="button" id="dc">閉じる</button><button class="btn btn-main" type="submit">保存する</button></div>
+  </form></div>`}`;
+  $("#ov").onclick = e => { if(e.target.id==="ov"||e.target.id==="dc") $("#sheetHost").innerHTML=""; };
+  if(!CAFE) $("#df").onsubmit = e => { e.preventDefault();
+    call("adminUpdate", no, {"状態":$("#d-st").value,"納期":$("#d-due").value,"担当":$("#d-as").value.trim(),"写真受領":$("#d-ph").value,"メモ":$("#d-memo").value})
+      .then(r=>{ apply(r); $("#sheetHost").innerHTML=""; toast("保存しました"); }); };
+}
+
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-stage],[data-next],[data-recv],[data-pay],[data-edit]"); if(!t || t.closest("#sheetHost")) return;
+  if(t.dataset.stage){ stageSel=t.dataset.stage; render(); }
+  else if(t.dataset.next){ t.disabled=true; call("adminAdvance", t.dataset.next).then(r=>{ apply(r); toast("次の工程へ進めました"); }).catch(()=>t.disabled=false); }
+  else if(t.dataset.recv){ t.disabled=true; call("adminUpdate", t.dataset.recv, {"写真受領":"はい"}).then(r=>{ apply(r); toast("写真の受け取りを記録しました"); }); }
+  else if(t.dataset.pay){ t.disabled=true; call("adminPay", t.dataset.pay.split(",")).then(r=>{ apply(r); toast("製造待ちに回しました"); }); }
+  else if(t.dataset.edit){ openDetail(t.dataset.edit); }
+});
+
+document.title = TITLE;
+try{ pass = sessionStorage.getItem("lico-pass-"+PAGE)||""; }catch(_){}
+if(pass){ call("adminList").then(r=>{ setRole(r.role); shell(); apply(r); }).catch(()=>login()); } else login();
+</script>
+</body>
+</html>

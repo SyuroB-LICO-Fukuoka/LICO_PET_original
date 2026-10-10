@@ -46,7 +46,7 @@
           <div>
             <div class="name">${esc(P.name)}</div>
             <dl><dt>機種</dt><dd>${esc(i.model)}</dd>
-              <dt>写真</dt><dd>${i.fileId?"アップロード済み":"未送信（削除して入れ直してください）"}</dd>
+              <dt>写真</dt><dd>${i.fileId&&i.designFileId?"デザイン作成済み":"未送信（削除して作り直してください）"}</dd>
               <dt>文字</dt><dd>${i.text?`${esc(i.text)}（${esc(i.font)}・${esc(i.color)}）`:"なし"}</dd></dl>
             <div class="row">
               <div class="qty"><button type="button" data-dec="${i.key}" aria-label="1つ減らす">−</button><output>${i.qty}</output><button type="button" data-inc="${i.key}" aria-label="1つ増やす">＋</button></div>
@@ -55,7 +55,7 @@
             </div>
           </div>
         </div>`).join("")}
-        <p style="margin-top:16px"><a href="product.html" style="text-decoration:underline;font-size:14px">＋ 別の写真でもうひとつ作る</a></p>
+        <p style="margin-top:16px"><a href="product.html" style="text-decoration:underline;font-size:14px">＋ 別の写真・別の機種でもうひとつ作る</a></p>
       </section>
 
       <form class="box" id="frm" novalidate>
@@ -122,7 +122,7 @@
     try{
       const cart = getCart();
       const r = await api({ action:"createOrder", mode: cafe?"cafe":"online", cafeId: cafeId(),
-        items: cart.map(i=>({model:i.model, fileId:i.fileId, text:i.text, font:i.font, color:i.color, qty:i.qty})),
+        items: cart.map(i=>({model:i.model, fileId:i.fileId, designFileId:i.designFileId, text:i.text, font:i.font, color:i.color, qty:i.qty})),
         customer: {name:f.name, kana:f.kana, tel:f.tel, email:f.email, zip:f.zip, address:f.address, note:f.note},
         delivery: f.delivery });
       if(r.checkoutUrl){ location.href = r.checkoutUrl; return; }

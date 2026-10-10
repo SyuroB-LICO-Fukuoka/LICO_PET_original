@@ -4,223 +4,112 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>写真でつくるオリジナルiPhoneケース｜LICO PET original</title>
-<meta name="description" content="お気に入りの写真でつくる、世界にひとつのiPhoneケース。写真をアップロードして、機種・お名前・書体を選ぶだけで注文できます。">
+<meta name="description" content="お気に入りの写真でつくる、世界にひとつのiPhoneケース。機種を選んで写真をアップロードし、画面の上で位置や大きさ、文字を決めて注文できます。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&family=Zen+Maru+Gothic:wght@500&family=Shippori+Mincho:wght@600&family=Yomogi&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shop.css">
+<style>
+.p-main-img img{width:100%;height:100%;object-fit:cover}
+.points{list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.points li{display:flex;gap:10px}
+.points li::before{content:"✓";color:var(--accent);font-weight:700}
+.big-btn{display:block;width:100%;text-align:center;background:#2aa4c9;color:#fff;font-size:20px;padding:18px;border:0;cursor:pointer;letter-spacing:.08em}
+.big-btn:hover{filter:brightness(1.05)}
+.flow3{display:grid;gap:12px;counter-reset:f}
+@media(min-width:700px){.flow3{grid-template-columns:repeat(3,1fr)}}
+.flow3 div{border:1px solid var(--line);padding:16px;font-size:14px}
+.flow3 b{display:block;font-family:var(--f-en);color:var(--accent);font-size:12px;letter-spacing:.14em}
+/* 機種・数量の選択 */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;overflow-y:auto}
+.sheet{background:#fff;width:min(1000px,100%);padding:20px 22px;display:flex;flex-direction:column;gap:18px}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px}
+.sheet-h h2{font-size:17px}
+.sheet-h button{background:none;border:0;font-size:28px;cursor:pointer;line-height:1}
+.models{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.models button{background:#fff;border:1px solid transparent;padding:10px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;line-height:1.3}
+.models button:hover{border-color:var(--line)}
+.models button[aria-pressed="true"]{border-color:var(--text);background:#f7f6f3}
+.models svg{width:34px;height:60px}
+.qtab{width:100%;border-collapse:collapse;font-size:14px}
+.qtab th{background:#555;color:#fff;font-weight:500;padding:8px}
+.qtab td{border:1px solid var(--line);padding:10px;text-align:center}
+.qtab input{width:80px;padding:8px;border:1px solid #d6d3cc;text-align:center;font-size:15px}
+.qsum{display:flex;justify-content:flex-end;gap:24px;font-size:15px}
+.qsum b{font-family:var(--f-en);font-size:20px}
+</style>
 </head>
 <body>
 <div id="site-header"></div>
-<div class="price-bar" id="priceBar"></div>
-
 <main class="wrap">
   <div class="p-head">
-    <p class="series en" id="pSeries"></p>
+    <p class="series en">PHOTO CASE SERIES</p>
     <h1 id="pName"></h1>
     <p class="price" id="pPrice"></p>
   </div>
-
   <div class="p-main">
-    <!-- 左：見本写真とケースのプレビュー -->
-    <div class="p-media">
-      <div class="p-main-img" id="mainImg"></div>
-      <div class="thumbs" id="thumbs"></div>
-      <p class="mock-cap">「できあがりイメージ」は目安です。実際の色味や写真の位置は少し変わることがあります。</p>
-    </div>
-
-    <!-- 右：注文の入力 -->
+    <div class="p-media"><div class="p-main-img"><img src="img/sample-work.jpg" alt="写真をプリントしたケースの見本"></div></div>
     <div class="p-info">
       <p class="p-lead" id="pLead"></p>
-      <p class="p-note" id="pNote"></p>
-
-      <p class="co-title">CUSTOM ORDER</p>
-      <ol class="steps" id="steps"></ol>
-
-      <form class="form-panel" id="orderForm" novalidate>
-        <div class="fld" id="f-model">
-          <label for="model">機種を選ぶ<span class="req">必須</span></label>
-          <select id="model"><option value="">選んでください</option></select>
-          <span class="err" id="e-model" hidden>機種を選んでください。</span>
-        </div>
-
-        <div class="fld" id="f-photo">
-          <span class="lbl">写真をアップロード<span class="req">必須</span></span>
-          <div class="upload">
-            <label class="pick"><input type="file" id="photo" accept="image/*">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>
-              写真を選ぶ</label>
-            <img class="pv" id="photoPv" alt="選んだ写真" hidden>
-            <span class="state" id="photoState"></span>
-          </div>
-          <span class="help">スマホの写真をそのまま選べます。明るく、ピントの合った写真がおすすめです。</span>
-          <span class="err" id="e-photo" hidden>写真を選んでください。写真の送信が終わるまでお待ちください。</span>
-        </div>
-
-        <div class="fld" id="f-text">
-          <label for="text">お名前・メッセージ<span class="opt">任意</span></label>
-          <input type="text" id="text" maxlength="20" placeholder="例：MOMO / もも">
-          <span class="help" id="textCount">全角10文字・半角20文字まで</span>
-          <span class="err" id="e-text" hidden>文字数が多すぎます。全角10文字・半角20文字までにしてください。</span>
-        </div>
-
-        <div class="fld" id="f-font">
-          <span class="lbl">書体を選ぶ</span>
-          <div class="swatches" id="fonts"></div>
-        </div>
-
-        <div class="fld" id="f-color">
-          <span class="lbl">文字の色を選ぶ</span>
-          <div class="swatches" id="colors"></div>
-        </div>
-
-        <div class="fld">
-          <span class="lbl">数量</span>
-          <div class="qty"><button type="button" id="minus" aria-label="1つ減らす">−</button><output id="qty">1</output><button type="button" id="plus" aria-label="1つ増やす">＋</button></div>
-        </div>
-
-        <div class="sum-row"><span>合計（税込）</span><span class="v" id="sum"></span></div>
-        <p class="ship-note" id="shipNote"></p>
-        <button class="btn btn-block" type="submit" id="addBtn">カートに入れる</button>
-      </form>
+      <ul class="points">
+        <li>1個から注文できます（数量を変えると金額が自動で変わります）</li>
+        <li>画面の上で、写真の位置・大きさ・向きを自由に決められます</li>
+        <li>お名前やメッセージを入れられます（書体5種類・色4種類）</li>
+        <li>できあがりイメージを確認してから注文できます</li>
+      </ul>
+      <button class="big-btn" type="button" id="startBtn">デザインする</button>
+      <p class="ship-note" id="shipNote"></p>
+      <div class="flow3">
+        <div><b>STEP 1</b>機種と数量を選ぶ</div>
+        <div><b>STEP 2</b>写真をアップロードして、位置や文字を決める</div>
+        <div><b>STEP 3</b>できあがりを確認してカートへ</div>
+      </div>
     </div>
   </div>
-
-  <!-- 各ステップの説明 -->
-  <section class="c-list" id="clist">
-    <h2>CUSTOM LIST</h2>
-    <div class="c-item" id="c1"><h3>1. 機種を選ぶ</h3><p>お使いのiPhoneの機種をお選びください。機種名は「設定」→「一般」→「情報」で確認できます。
-一覧にない機種は、LINEでお問い合わせください。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
-    <div class="c-item" id="c2"><h3>2. 写真をアップロード</h3><p>ケースいっぱいに写真を入れます。縦長の写真がいちばんきれいに収まります。
-カメラの穴の部分は写真が隠れるので、大切な部分は中央あたりにくる写真がおすすめです。
-写真はご注文のその場でアップロードしていただきます（あとから送ることはできません）。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
-    <div class="c-item" id="c3"><h3>3. お名前・メッセージ</h3><p>ケースの下のほうに文字を入れられます。お名前、日付、短いメッセージなど自由にどうぞ。
-入れない場合は空欄のままで大丈夫です。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
-    <div class="c-item" id="c4"><h3>4. 書体を選ぶ</h3><p>和文3種類・英文2種類からお選びいただけます。英文書体を選んだときは、ローマ字で入力してください。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
-    <div class="c-item" id="c5"><h3>5. 文字の色を選ぶ</h3><p>写真の色に合わせて、読みやすい色をお選びください。迷ったときは、明るい写真には「ブラック」、暗い写真には「ホワイト」がおすすめです。</p><a class="back" href="#orderForm">注文フォームへ戻る</a></div>
-  </section>
-
   <section class="faq" id="faq"><h2>FAQ</h2><div id="faqList"></div></section>
 </main>
-
 <div id="site-footer"></div>
+<div id="sheetHost"></div>
 
 <script src="js/config.js"></script>
 <script src="js/common.js"></script>
 <script>
 (() => {
-  const {S, yen, esc, getCart, setCart, api, loadImage, toJpeg, toast, chrome} = window.LICO;
+  const {S, yen, esc, chrome} = window.LICO;
   const P = S.PRODUCT;
   chrome();
-
-  const st = { model:"", fileId:"", thumb:"", full:"", later:false, text:"", font:P.fonts[0].id, color:P.colors[0].id, qty:1, uploading:false };
   const $ = s => document.querySelector(s);
-
-  /* 商品の基本情報 */
-  $("#pSeries").textContent = P.series;
   $("#pName").textContent = P.name;
   $("#pPrice").innerHTML = `${yen(P.price)}<small>（税込）</small>`;
   $("#pLead").textContent = P.lead;
-  $("#pNote").textContent = P.note;
   $("#shipNote").textContent = P.shipNote;
-  $("#model").insertAdjacentHTML("beforeend", P.models.map(m=>`<option>${esc(m)}</option>`).join(""));
-  $("#faqList").innerHTML = P.faq.map(f=>`<details><summary>Q. ${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("");
+  $("#faqList").innerHTML = P.faq.map(f => `<details><summary>Q. ${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("");
 
-  /* 左の画像：1枚目はできあがりイメージ、その後に見本写真 */
-  let view = 0;
-  function renderMedia(){
-    const items = ["mock", ...P.images];
-    $("#thumbs").innerHTML = items.map((it,i)=>`<button type="button" data-i="${i}" aria-current="${i===view}" aria-label="${i?"見本写真":"できあがりイメージ"}">${i? `<img src="${esc(it)}" alt="">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#777">イメージ</div>`}</button>`).join("");
-    if(view===0){
-      const f = P.fonts.find(x=>x.id===st.font), c = P.colors.find(x=>x.id===st.color);
-      $("#mainImg").innerHTML = `<div class="mock">${st.full||st.thumb?`<img src="${st.full||st.thumb}" alt="選んだ写真">`:`<div class="empty">写真を選ぶと、ここにできあがりイメージが出ます</div>`}<div class="cam"></div>${st.text?`<div class="txt" style="font-family:${f.family};color:${c.hex}">${esc(st.text)}</div>`:""}</div>`;
-    } else {
-      $("#mainImg").innerHTML = `<img src="${esc(items[view])}" alt="見本写真" style="width:100%;height:100%;object-fit:cover">`;
-    }
+  // 機種アイコン（ケースの外形とカメラ）
+  const icon = big => `<svg viewBox="0 0 34 60" fill="none" stroke="#333" stroke-width="1.3"><rect x="2" y="2" width="30" height="56" rx="${big ? 6 : 5}"/><rect x="5" y="5" width="${big ? 13 : 10}" height="${big ? 13 : 11}" rx="3"/></svg>`;
+  let model = "", qty = 1;
+  function open(){
+    $("#sheetHost").innerHTML = `<div class="sheet-bg" id="bg"><div class="sheet" role="dialog" aria-label="機種と数量の選択">
+      <div class="sheet-h"><h2>機種・数量の選択</h2><button type="button" id="close" aria-label="閉じる">×</button></div>
+      <p class="help" style="font-size:13px;color:var(--sub)">お使いのiPhoneの機種を選んでください。</p>
+      <div class="models" id="models">${P.models.map(m => `<button type="button" data-m="${esc(m)}" aria-pressed="${m === model}">${icon(/Pro|Max|Plus|Air/.test(m))}${esc(m)}</button>`).join("")}</div>
+      <table class="qtab"><thead><tr><th>機種</th><th>数量</th><th>単価（税込）</th><th>小計（税込）</th></tr></thead>
+        <tbody><tr><td id="qm">${esc(model) || "—"}</td><td><input type="number" id="q" min="1" max="20" value="${qty}" aria-label="数量"></td><td>${yen(P.price)}</td><td id="qs">${yen(P.price * qty)}</td></tr></tbody></table>
+      <div class="qsum"><span>合計（税込）</span><b id="qt">${yen(P.price * qty)}</b></div>
+      <button class="big-btn" type="button" id="toDesign">デザインする</button>
+      <p class="help" style="font-size:12px;color:var(--sub);text-align:center">ほかの機種もほしいときは、カートに入れたあと「別の写真でもうひとつ作る」から追加できます。</p>
+    </div></div>`;
+    const upd = () => { $("#qm").textContent = model || "—"; $("#qs").textContent = yen(P.price * qty); $("#qt").textContent = yen(P.price * qty); };
+    $("#models").onclick = e => { const b = e.target.closest("button"); if(!b) return; model = b.dataset.m; document.querySelectorAll("#models button").forEach(x => x.setAttribute("aria-pressed", x === b)); upd(); };
+    $("#q").oninput = e => { qty = Math.max(1, Math.min(20, parseInt(e.target.value) || 1)); upd(); };
+    $("#close").onclick = () => $("#sheetHost").innerHTML = "";
+    $("#bg").onclick = e => { if(e.target.id === "bg") $("#sheetHost").innerHTML = ""; };
+    $("#toDesign").onclick = () => {
+      if(!model){ window.LICO.toast("機種を選んでください"); return; }
+      location.href = `design.html?model=${encodeURIComponent(model)}&qty=${qty}`;
+    };
   }
-  $("#thumbs").addEventListener("click", e=>{ const b=e.target.closest("button"); if(b){ view=+b.dataset.i; renderMedia(); } });
-
-  /* CUSTOM ORDER の一覧（入力済みは「✓」） */
-  function renderSteps(){
-    const done = [!!st.model, !!st.fileId, !!st.text, true, true];
-    const labels = ["機種を選ぶ","写真をアップロード","お名前・メッセージ","書体を選ぶ","文字の色を選ぶ"];
-    $("#steps").innerHTML = labels.map((l,i)=>`<li><span class="no en">CUSTOM ${i+1}</span><a href="#c${i+1}">${l}</a>${done[i]&&i<3?`<span class="done">✓</span>`:""}</li>`).join("");
-  }
-
-  /* 書体・色の選択 */
-  function renderSwatches(){
-    $("#fonts").innerHTML = P.fonts.map(f=>`<button type="button" data-font="${f.id}" aria-pressed="${f.id===st.font}"><span class="s" style="font-family:${f.family}">${esc(st.text||f.sample).slice(0,6)}</span>${esc(f.label)}</button>`).join("");
-    $("#colors").innerHTML = P.colors.map(c=>`<button type="button" data-color="${c.id}" aria-pressed="${c.id===st.color}"><span class="dot" style="background:${c.hex}"></span>${esc(c.label)}</button>`).join("");
-  }
-  $("#fonts").addEventListener("click", e=>{ const b=e.target.closest("button"); if(b){ st.font=b.dataset.font; renderSwatches(); view=0; renderMedia(); } });
-  $("#colors").addEventListener("click", e=>{ const b=e.target.closest("button"); if(b){ st.color=b.dataset.color; renderSwatches(); view=0; renderMedia(); } });
-
-  /* 文字数（全角は2、半角は1と数えて20まで） */
-  const width = s => [...s].reduce((a,ch)=>a+(ch.match(/[ -~｡-ﾟ]/)?1:2),0);
-  $("#text").addEventListener("input", e=>{
-    st.text = e.target.value.trim();
-    const w = width(st.text);
-    $("#textCount").textContent = `${w}/20（全角は2、半角は1と数えます）`;
-    $("#e-text").hidden = w<=20;
-    renderSwatches(); renderSteps(); view=0; renderMedia();
-  });
-
-  $("#model").addEventListener("change", e=>{ st.model=e.target.value; $("#e-model").hidden=true; renderSteps(); });
-
-  /* 数量と合計（数量を変えると自動で計算） */
-  function renderSum(){ $("#qty").textContent=st.qty; $("#sum").innerHTML=`${yen(P.price*st.qty)}<small>（${yen(P.price)} × ${st.qty}個）</small>`; $("#priceBar").textContent=`${yen(P.price*st.qty)}（税込）`; }
-  $("#minus").onclick=()=>{ if(st.qty>1){ st.qty--; renderSum(); } };
-  $("#plus").onclick=()=>{ if(st.qty<20){ st.qty++; renderSum(); } };
-
-  /* 写真のアップロード（選んだ時点で送っておく） */
-  $("#photo").addEventListener("change", async e=>{
-    const file = e.target.files[0]; if(!file) return;
-    $("#e-photo").hidden = true;
-    st.uploading = true; $("#addBtn").disabled = true;
-    $("#photoState").textContent = "写真を準備しています…";
-    try{
-      const im = await loadImage(file);
-      st.thumb = toJpeg(im, 360, .8);
-      st.full = toJpeg(im, 1200, .85);
-      $("#photoPv").src = st.thumb; $("#photoPv").hidden = false;
-      view = 0; renderMedia();
-      const big = toJpeg(im, 2400, .9);
-      $("#photoState").textContent = "写真を送っています…";
-      try{
-        const r = await api({action:"uploadPhoto", name:file.name, data: big.split(",")[1]});
-        st.fileId = r.fileId;
-        $("#photoState").textContent = "写真を受け付けました";
-      }catch(err){
-        st.fileId = "";
-        $("#photoState").textContent = err.message;
-      }
-    }catch(err){
-      $("#photoState").textContent = err.message;
-    }
-    st.uploading = false; $("#addBtn").disabled = false; renderSteps();
-  });
-
-  /* カートに入れる */
-  $("#orderForm").addEventListener("submit", e=>{
-    e.preventDefault();
-    let ok = true;
-    if(!st.model){ $("#e-model").hidden=false; ok=false; }
-    if(!st.fileId){ $("#e-photo").hidden=false; ok=false; }
-    if(width(st.text)>20){ $("#e-text").hidden=false; ok=false; }
-    if(!ok){ document.querySelector(".err:not([hidden])").closest(".fld").scrollIntoView({behavior:"smooth",block:"center"}); return; }
-    const f = P.fonts.find(x=>x.id===st.font), c = P.colors.find(x=>x.id===st.color);
-    const cart = getCart();
-    cart.push({ key: Date.now().toString(36), model: st.model, fileId: st.fileId, thumb: st.thumb,
-      text: st.text, font: st.text ? f.label : "", fontId: st.font, color: st.text ? c.label : "", qty: st.qty });
-    setCart(cart);
-    location.href = "cart.html?added=1";
-  });
-
-  /* スクロールしたら上に金額を出す */
-  const io = new IntersectionObserver(([en])=>$("#priceBar").classList.toggle("show", !en.isIntersecting));
-  io.observe($("#pPrice"));
-
-  renderSteps(); renderSwatches(); renderSum(); renderMedia();
+  $("#startBtn").onclick = open;
 })();
 </script>
 </body>
