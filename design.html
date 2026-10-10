@@ -331,7 +331,7 @@ function renderPanel(){
       const tx = panel.querySelector("#tx");
       tx.onfocus = () => push();
       tx.oninput = () => { const w = [...tx.value].reduce((a, ch) => a + (/[ -~｡-ﾟ]/.test(ch) ? 1 : 2), 0); if(w > 20){ tx.value = st.texts[i].text; return; } st.texts[i].text = tx.value; draw(); };
-      panel.querySelector("#tf").onchange = e => { push(); st.texts[i].font = e.target.value; draw(); };
+      panel.querySelector("#tf").onchange = e => { push(); st.texts[i].font = e.target.value; draw(); const f = P.fonts.find(x => x.id === e.target.value); if(f && document.fonts) document.fonts.load(`${f.weight || 400} 40px ${f.family}`, "あA").then(draw); };
       panel.querySelectorAll("#tc button").forEach(b => b.onclick = () => { push(); st.texts[i].color = b.dataset.c; draw(); renderPanel(); });
       panel.querySelector("#tcFree").onchange = e => { push(); st.texts[i].color = e.target.value; draw(); renderPanel(); };
       const ts = panel.querySelector("#ts"), tr = panel.querySelector("#tr");
@@ -395,7 +395,8 @@ document.getElementById("confirmBtn").onclick = () => {
 };
 
 window.LICO.chrome();
-document.fonts && document.fonts.ready.then(draw);
+// 書体は使うときまで読み込まれないので、最初に全部読み込んでから描き直す
+if(document.fonts){ document.fonts.ready.then(draw); Promise.all(P.fonts.map(f => document.fonts.load(`${f.weight || 400} 40px ${f.family}`, "あA").catch(() => {}))).then(draw); }
 renderPanel(); draw();
 })();
 </script>
