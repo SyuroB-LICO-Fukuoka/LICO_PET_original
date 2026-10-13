@@ -17,8 +17,8 @@
   <div class="done-box" id="box"><div class="spinner" aria-label="確認中"></div></div>
 </main>
 <div id="site-footer"></div>
-<script src="js/config.js?v=1010c"></script>
-<script src="js/common.js?v=1010c"></script>
+<script src="js/config.js?v=1013a"></script>
+<script src="js/common.js?v=1013a"></script>
 <script>
 (async () => {
   const {S, esc, isCafe, setCart, api, chrome, qs} = window.LICO;
@@ -27,11 +27,11 @@
   const box = document.getElementById("box"), ttl = document.getElementById("ttl");
   const line = `<p>ご不明な点は、注文番号を添えてLINE（${esc(S.LINE_ID)}）でお問い合わせください。</p>`;
 
-  if(isCafe()){
+  if(isCafe() && !sid){   // カフェの現金受付（カード払いは下で確認する）
     setCart([]);
     ttl.textContent = "受け付けました";
     box.innerHTML = `<p>注文番号</p><p class="no">${esc(order)}</p>
-      <p>お支払いは毎週まとめて店頭でお願いします。入金を確認してから製作を始めます。</p>${line}
+      <p>お代金（現金）はカフェでお受け取りください。カフェから毎週まとめてLICOへお振込みいただき、確認してから製作を始めます。</p>${line}
       <a class="btn" href="product.html">次のお客様の受付へ</a>`;
     return;
   }
@@ -41,7 +41,7 @@
     ttl.textContent = "ご注文ありがとうございました";
     box.innerHTML = `<p>注文番号</p><p class="no">${esc(r.orderNo)}</p>
       <p>${r.paid ? "お支払いを確認しました。確認メールをお送りしています。" : "お支払いの確認に少し時間がかかっています。確認ができしだいメールでお知らせします。"}</p>
-      ${line}<a class="btn" href="index.html">トップへ戻る</a>`;
+      ${line}${isCafe()?`<a class="btn" href="product.html">次のお客様の受付へ</a>`:`<a class="btn" href="index.html">トップへ戻る</a>`}`;
   }catch(err){
     ttl.textContent = "ご注文の確認";
     box.innerHTML = `<p class="alert">${esc(err.message)}</p><p>お支払いが済んでいる場合は、確認メールをお待ちください。ご不明な点はLINEでお問い合わせください。</p><a class="btn btn-line" href="${esc(S.LINE_URL)}" target="_blank" rel="noopener">LINEで問い合わせる</a>`;

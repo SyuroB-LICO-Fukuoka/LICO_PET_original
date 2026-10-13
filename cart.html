@@ -18,15 +18,15 @@
 </main>
 <div id="site-footer"></div>
 
-<script src="js/config.js?v=1010c"></script>
-<script src="js/common.js?v=1010c"></script>
+<script src="js/config.js?v=1013a"></script>
+<script src="js/common.js?v=1013a"></script>
 <script>
 (() => {
   const {S, yen, esc, isCafe, cafeId, getCart, setCart, subtotal, shipping, api, toast, chrome, qs} = window.LICO;
   const P = S.PRODUCT;
   chrome();
   const cafe = isCafe();
-  const f = { name:"", kana:"", email:"", tel:"", delivery: cafe ? "pickup" : "ship", zip:"", address:"", note:"", agree:false };
+  const f = { pay: cafe ? "cash" : "card", name:"", kana:"", email:"", tel:"", delivery: cafe ? "pickup" : "ship", zip:"", address:"", note:"", agree:false };
   const $ = s => document.querySelector(s);
   if(qs.get("added")) setTimeout(()=>toast("カートに入れました"),100);
 
@@ -60,7 +60,10 @@
 
       <form class="box" id="frm" novalidate>
         <h2>お客様の情報</h2>
-        ${cafe?`<p class="info">店頭受付です。お支払いは毎週まとめて店頭でお願いします。入金を確認してから製作を始めます。</p>`:""}
+        ${cafe?`<div class="fld"><span class="lbl">お支払い方法</span><div class="seg">
+          <button type="button" data-pay="cash" aria-pressed="${f.pay==="cash"}">現金</button>
+          <button type="button" data-pay="card" aria-pressed="${f.pay==="card"}">クレジットカード</button></div></div>
+          <p class="info">${f.pay==="cash"?"お代金はカフェでお受け取りください。カフェから毎週まとめてLICOへお振込みいただき、確認してから製作を始めます。":"次の画面で、お客様にカード情報を入力していただきます。お支払いが済むと製作を始めます。"}</p>`:""}
         <div class="grid2">
           <div class="fld"><label for="c-name">お名前<span class="req">必須</span></label><input type="text" id="c-name" autocomplete="name" value="${esc(f.name)}"></div>
           <div class="fld"><label for="c-kana">フリガナ<span class="req">必須</span></label><input type="text" id="c-kana" value="${esc(f.kana)}"></div>
@@ -84,8 +87,8 @@
         </div>
         <label class="check"><input type="checkbox" id="c-agree" ${f.agree?"checked":""}> <span><a href="tokushoho.html" target="_blank" style="text-decoration:underline">特定商取引法に基づく表記</a>と<a href="tokushoho.html#privacy" target="_blank" style="text-decoration:underline">プライバシーポリシー</a>に同意します</span></label>
         <div id="msg"></div>
-        <button class="btn btn-block" type="submit" id="go">${cafe?"この内容で受け付ける":"カード決済へ進む"}</button>
-        ${cafe?"":`<p class="p-note" style="text-align:center">次の画面で、カード情報を安全に入力していただきます（Stripe）。</p>`}
+        <button class="btn btn-block" type="submit" id="go">${cafe&&f.pay==="cash"?"この内容で受け付ける":"カード決済へ進む"}</button>
+        ${cafe&&f.pay==="cash"?"":`<p class="p-note" style="text-align:center">次の画面で、カード情報を安全に入力していただきます（Stripe）。</p>`}
       </form>
     </div>`;
   }
@@ -105,6 +108,7 @@
     if(t.dataset.dec){ pull(); const i=it(t.dataset.dec); if(i && i.qty>1){ i.qty--; setCart(cart); render(); } }
     if(t.dataset.rm){ pull(); setCart(cart.filter(i=>i.key!==t.dataset.rm)); render(); }
     if(t.dataset.dl){ pull(); f.delivery=t.dataset.dl; render(); }
+    if(t.dataset.pay){ pull(); f.pay=t.dataset.pay; render(); }
   });
 
   document.addEventListener("submit", async e=>{
@@ -124,13 +128,13 @@
       const r = await api({ action:"createOrder", mode: cafe?"cafe":"online", cafeId: cafeId(),
         items: cart.map(i=>({model:i.model, fileId:i.fileId, designFileId:i.designFileId, text:i.text, font:i.font, color:i.color, qty:i.qty})),
         customer: {name:f.name, kana:f.kana, tel:f.tel, email:f.email, zip:f.zip, address:f.address, note:f.note},
-        delivery: f.delivery });
+        delivery: f.delivery, payMethod: f.pay });
       if(r.checkoutUrl){ location.href = r.checkoutUrl; return; }
       setCart([]);
       location.href = "complete.html?order=" + encodeURIComponent(r.orderNo);
     }catch(err){
       $("#msg").innerHTML = `<p class="alert">${esc(err.message)}</p>`;
-      go.disabled = false; go.textContent = cafe?"この内容で受け付ける":"カード決済へ進む";
+      go.disabled = false; go.textContent = cafe&&f.pay==="cash"?"この内容で受け付ける":"カード決済へ進む";
     }
   });
 
