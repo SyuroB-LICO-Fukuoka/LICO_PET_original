@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>写真でつくるオリジナルiPhoneケース｜LICO PET original</title>
-<meta name="description" content="お気に入りの写真でつくる、世界にひとつのiPhoneケース。機種を選んで写真をアップロードし、画面の上で位置や大きさ、文字を決めて注文できます。">
+<title>商品一覧｜LICO PET original</title>
+<meta name="description" content="お気に入りの写真でつくる、世界にひとつのスマホケース・本革キーケース・名刺入れ・インテリアボード。写真をアップロードし、画面の上で位置や大きさ、文字を決めて注文できます。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
@@ -30,86 +30,151 @@
 .models button{background:#fff;border:1px solid transparent;padding:10px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;line-height:1.3}
 .models button:hover{border-color:var(--line)}
 .models button[aria-pressed="true"]{border-color:var(--text);background:#f7f6f3}
-.models svg{width:34px;height:60px}
 .qtab{width:100%;border-collapse:collapse;font-size:14px}
 .qtab th{background:#555;color:#fff;font-weight:500;padding:8px}
 .qtab td{border:1px solid var(--line);padding:10px;text-align:center}
 .qtab input{width:80px;padding:8px;border:1px solid #d6d3cc;text-align:center;font-size:15px}
 .qsum{display:flex;justify-content:flex-end;gap:24px;font-size:15px}
 .qsum b{font-family:var(--f-en);font-size:20px}
+/* 商品一覧 */
+.plist{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin:10px 0 40px}
+.pcard{display:flex;flex-direction:column;gap:8px;color:inherit;text-decoration:none}
+.pcard .ph{aspect-ratio:1;background:#f4f2ee;overflow:hidden}
+.pcard .ph img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.pcard:hover .ph img{transform:scale(1.03)}
+.pcard .s{font-family:var(--f-en);font-size:11px;letter-spacing:.14em;color:var(--accent)}
+.pcard .n{font-size:15px;font-weight:500}
+.pcard .pr{font-family:var(--f-en);font-size:17px}
+.pcard .pr small{font-size:11px;color:var(--sub);margin-left:3px}
+.size{font-size:13px;color:var(--sub);border-left:3px solid var(--line);padding-left:10px}
+/* 機種の選択 */
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{border:1px solid var(--line);background:#fff;padding:8px 12px;font-size:13px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--text);color:#fff;border-color:var(--text)}
+.msearch{border:1px solid #d6d3cc;padding:10px;font-size:15px;width:100%}
+.mgroup h3{font-size:13px;color:var(--sub);font-weight:500;margin:6px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.models{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px}
+.models svg{width:auto;height:64px}
+.mlist{max-height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding-right:4px}
+.vars{display:grid;gap:10px}
+@media(min-width:700px){.vars{grid-template-columns:1fr 1fr}}
+.vars button{border:1px solid var(--line);background:#fff;padding:14px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--sub)}
+.vars button b{font-size:15px;color:var(--text)}
+.vars button[aria-pressed="true"]{border-color:var(--text);background:#f7f6f3}
 </style>
 </head>
 <body>
 <div id="site-header"></div>
-<main class="wrap">
-  <div class="p-head">
-    <p class="series en">PHOTO CASE SERIES</p>
-    <h1 id="pName"></h1>
-    <p class="price" id="pPrice"></p>
-  </div>
+<main class="wrap" id="main"></main>
+<div id="site-footer"></div>
+<div id="sheetHost"></div>
+
+<script src="js/config.js?v=1015a"></script>
+<script src="js/models.js?v=1015a"></script>
+<script src="js/common.js?v=1015a"></script>
+<script>
+(() => {
+  const {S, yen, esc, chrome, qs, product, shapeIcon, toast} = window.LICO;
+  chrome();
+  const $ = s => document.querySelector(s);
+  const main = $("#main");
+  const id = qs.get("id");
+  const priceText = p => p.kind === "variant" ? p.variants.map(v => yen(v.price)).join("〜").replace(/〜.*〜/, "〜") : yen(p.price);
+
+  /* ===== 商品一覧（?id がないとき） ===== */
+  if(!id || !S.PRODUCTS.some(p => p.id === id)){
+    document.title = "商品一覧｜" + S.SHOP_NAME;
+    main.innerHTML = `<div class="page-title"><span class="en">ITEMS</span><h1>商品一覧</h1></div>
+      <p style="font-size:14px;color:var(--sub)">好きな写真で、世界にひとつのアイテムをおつくりします。つくりたい商品を選んでください。</p>
+      <div class="plist">${S.PRODUCTS.map(p => `<a class="pcard" href="product.html?id=${p.id}">
+        <div class="ph"><img src="${esc(p.images[0])}" alt="${esc(p.name)}の見本" loading="lazy"></div>
+        <span class="s">${esc(p.series)}</span><span class="n">${esc(p.name)}</span>
+        <span class="pr">${priceText(p)}<small>（税込）</small></span></a>`).join("")}</div>
+      <section class="faq" id="faq"><h2>FAQ</h2><div>${S.faq.map(f => `<details><summary>Q. ${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("")}</div></section>`;
+    return;
+  }
+
+  /* ===== 商品ページ ===== */
+  const P = product(id);
+  document.title = P.name + "｜" + S.SHOP_NAME;
+  main.innerHTML = `
+  <p style="font-size:12px;margin:6px 0 -6px"><a href="product.html" style="text-decoration:underline">商品一覧</a> ＞ ${esc(P.short)}</p>
+  <div class="p-head"><p class="series en">${esc(P.series)}</p><h1>${esc(P.name)}</h1>
+    <p class="price">${P.kind === "variant" ? P.variants.map(v => `${esc(v.label.replace(/（.*/, ""))} ${yen(v.price)}`).join("／") : yen(P.price)}<small>（税込）</small></p></div>
   <div class="p-main">
-    <div class="p-media"><div class="p-main-img"><img src="img/sample-work.jpg" alt="写真をプリントしたケースの見本"></div></div>
+    <div class="p-media"><div class="p-main-img"><img src="${esc(P.images[0])}" alt="${esc(P.name)}の見本"></div></div>
     <div class="p-info">
-      <p class="p-lead" id="pLead"></p>
-      <ul class="points">
-        <li>1個から注文できます（数量を変えると金額が自動で変わります）</li>
-        <li>画面の上で、写真の位置・大きさ・向きを自由に決められます</li>
-        <li>お名前やメッセージを入れられます（書体13種類・色100色以上）</li>
-        <li>できあがりイメージを確認してから注文できます</li>
-      </ul>
+      <p class="p-lead">${esc(P.lead)}</p>
+      ${P.size ? `<p class="size">サイズ：${esc(P.size)}</p>` : ""}
+      <ul class="points">${(P.points || []).map(x => `<li>${esc(x)}</li>`).join("")}
+        <li>お名前やメッセージを入れられます（書体13種類・色100色以上）</li><li>できあがりイメージを確認してから注文できます</li></ul>
       <button class="big-btn" type="button" id="startBtn">デザインする</button>
-      <p class="ship-note" id="shipNote"></p>
+      <p class="ship-note">${esc(S.shipNote)}</p>
+      ${P.note ? `<p class="size">${esc(P.note)}</p>` : ""}
       <div class="flow3">
-        <div><b>STEP 1</b>機種と数量を選ぶ</div>
+        <div><b>STEP 1</b>${P.optionLabel ? esc(P.optionLabel) + "と" : ""}数量を選ぶ</div>
         <div><b>STEP 2</b>写真をアップロードして、位置や文字を決める</div>
         <div><b>STEP 3</b>できあがりを確認してカートへ</div>
       </div>
     </div>
   </div>
-  <section class="faq" id="faq"><h2>FAQ</h2><div id="faqList"></div></section>
-</main>
-<div id="site-footer"></div>
-<div id="sheetHost"></div>
+  <section class="faq" id="faq"><h2>FAQ</h2><div>${S.faq.map(f => `<details><summary>Q. ${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("")}</div></section>`;
 
-<script src="js/config.js?v=1013a"></script>
-<script src="js/common.js?v=1013a"></script>
-<script>
-(() => {
-  const {S, yen, esc, chrome} = window.LICO;
-  const P = S.PRODUCT;
-  chrome();
-  const $ = s => document.querySelector(s);
-  $("#pName").textContent = P.name;
-  $("#pPrice").innerHTML = `${yen(P.price)}<small>（税込）</small>`;
-  $("#pLead").textContent = P.lead;
-  $("#shipNote").textContent = P.shipNote;
-  $("#faqList").innerHTML = P.faq.map(f => `<details><summary>Q. ${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("");
-
-  // 機種アイコン（ケースの外形とカメラ）
-  const icon = big => `<svg viewBox="0 0 34 60" fill="none" stroke="#333" stroke-width="1.3"><rect x="2" y="2" width="30" height="56" rx="${big ? 6 : 5}"/><rect x="5" y="5" width="${big ? 13 : 10}" height="${big ? 13 : 11}" rx="3"/></svg>`;
-  let model = "", qty = 1;
+  /* ===== 選択シート（機種・色・仕上げ と 数量） ===== */
+  const M = window.LICO_MODELS;
+  let opt = P.kind === "variant" ? P.variants[0].id : (P.kind === "color" ? P.colors[0].label : ""), qty = 1, tab = 0, word = "";
+  const unit = () => P.kind === "variant" ? (P.variants.find(v => v.id === opt) || P.variants[0]).price : P.price;
+  const optLabel = () => P.kind === "variant" ? (P.variants.find(v => v.id === opt) || {}).label : opt;
+  const phoneBtn = m => `<button type="button" data-m="${esc(m.n)}" aria-pressed="${m.n === opt}">${shapeIcon("phone", m.n, 64)}${esc(m.n)}</button>`;
+  function modelList(){
+    if(word){
+      const w = word.toLowerCase().replace(/\s+/g, ""), hits = [];
+      M.groups.forEach(g => g.subs.forEach(s => s.models.forEach(m => { if((g.label + m.n).toLowerCase().replace(/\s+/g, "").includes(w) && !hits.some(h => h.n === m.n)) hits.push(m); })));
+      return hits.length ? `<div class="models">${hits.map(phoneBtn).join("")}</div>` : `<p class="help">見つかりませんでした。別の書き方（例：「sense8」「S24」）でお試しください。</p>`;
+    }
+    return M.groups[tab].subs.map(s => `<div class="mgroup">${s.label ? `<h3>${esc(s.label)}</h3>` : ""}<div class="models">${s.models.map(phoneBtn).join("")}</div></div>`).join("");
+  }
+  function chooser(){
+    if(P.kind === "phone") return `<p class="help" style="font-size:13px;color:var(--sub)">お使いのスマホの機種を選んでください。絵はカメラの位置の目安です。</p>
+      <input type="search" class="msearch" id="msearch" placeholder="機種名で探す（例：iPhone 16、Galaxy S24、SO-51E）" value="${esc(word)}">
+      <div class="tabs" id="tabs">${M.groups.map((g, i) => `<button type="button" data-t="${i}" aria-pressed="${!word && i === tab}">${esc(g.label)}</button>`).join("")}</div>
+      <div class="mlist" id="models">${modelList()}</div>`;
+    if(P.kind === "color") return `<p class="help" style="font-size:13px;color:var(--sub)">キーケースの色を選んでください。</p>
+      <div class="models" id="models">${P.colors.map(c => `<button type="button" data-m="${esc(c.label)}" aria-pressed="${c.label === opt}">${shapeIcon(P.id, c.label, 64)}${esc(c.label)}</button>`).join("")}</div>`;
+    if(P.kind === "variant") return `<div class="vars" id="vars">${P.variants.map(v => `<button type="button" data-v="${v.id}" aria-pressed="${v.id === opt}"><b>${esc(v.label)}　${yen(v.price)}</b>${esc(v.desc || "")}</button>`).join("")}</div>`;
+    return "";
+  }
   function open(){
-    $("#sheetHost").innerHTML = `<div class="sheet-bg" id="bg"><div class="sheet" role="dialog" aria-label="機種と数量の選択">
-      <div class="sheet-h"><h2>機種・数量の選択</h2><button type="button" id="close" aria-label="閉じる">×</button></div>
-      <p class="help" style="font-size:13px;color:var(--sub)">お使いのiPhoneの機種を選んでください。</p>
-      <div class="models" id="models">${P.models.map(m => `<button type="button" data-m="${esc(m)}" aria-pressed="${m === model}">${icon(/Pro|Max|Plus|Air/.test(m))}${esc(m)}</button>`).join("")}</div>
-      <table class="qtab"><thead><tr><th>機種</th><th>数量</th><th>単価（税込）</th><th>小計（税込）</th></tr></thead>
-        <tbody><tr><td id="qm">${esc(model) || "—"}</td><td><input type="number" id="q" min="1" max="20" value="${qty}" aria-label="数量"></td><td>${yen(P.price)}</td><td id="qs">${yen(P.price * qty)}</td></tr></tbody></table>
-      <div class="qsum"><span>合計（税込）</span><b id="qt">${yen(P.price * qty)}</b></div>
+    $("#sheetHost").innerHTML = `<div class="sheet-bg" id="bg"><div class="sheet" role="dialog" aria-label="${esc(P.optionLabel || "数量")}の選択">
+      <div class="sheet-h"><h2>${P.optionLabel ? esc(P.optionLabel) + "・" : ""}数量の選択</h2><button type="button" id="close" aria-label="閉じる">×</button></div>
+      <div id="chooser">${chooser()}</div>
+      <table class="qtab"><thead><tr>${P.optionLabel ? `<th>${esc(P.optionLabel)}</th>` : `<th>商品</th>`}<th>数量</th><th>単価（税込）</th><th>小計（税込）</th></tr></thead>
+        <tbody><tr><td id="qm"></td><td><input type="number" id="q" min="1" max="20" value="${qty}" aria-label="数量"></td><td id="qu"></td><td id="qs"></td></tr></tbody></table>
+      <div class="qsum"><span>合計（税込）</span><b id="qt"></b></div>
       <button class="big-btn" type="button" id="toDesign">デザインする</button>
-      <p class="help" style="font-size:12px;color:var(--sub);text-align:center">ほかの機種もほしいときは、カートに入れたあと「別の写真でもうひとつ作る」から追加できます。</p>
+      <p class="help" style="font-size:12px;color:var(--sub);text-align:center">ほかの${esc(P.optionLabel || "商品")}もほしいときは、カートに入れたあと「別の写真でもうひとつ作る」から追加できます。</p>
     </div></div>`;
-    const upd = () => { $("#qm").textContent = model || "—"; $("#qs").textContent = yen(P.price * qty); $("#qt").textContent = yen(P.price * qty); };
-    $("#models").onclick = e => { const b = e.target.closest("button"); if(!b) return; model = b.dataset.m; document.querySelectorAll("#models button").forEach(x => x.setAttribute("aria-pressed", x === b)); upd(); };
+    const upd = () => { $("#qm").textContent = P.optionLabel ? (optLabel() || "—") : P.short; $("#qu").textContent = yen(unit()); $("#qs").textContent = yen(unit() * qty); $("#qt").textContent = yen(unit() * qty); };
+    const bind = () => {
+      const ms = $("#msearch"); if(ms){ ms.oninput = () => { word = ms.value.trim(); $("#models").innerHTML = modelList(); document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-pressed", !word && +b.dataset.t === tab)); }; }
+      const tb = $("#tabs"); if(tb) tb.onclick = e => { const b = e.target.closest("button"); if(!b) return; tab = +b.dataset.t; word = ""; $("#chooser").innerHTML = chooser(); bind(); };
+    };
+    $("#chooser").onclick = e => {
+      const b = e.target.closest("button[data-m],button[data-v]"); if(!b) return;
+      opt = b.dataset.m || b.dataset.v;
+      document.querySelectorAll("#chooser button[data-m],#chooser button[data-v]").forEach(x => x.setAttribute("aria-pressed", x === b)); upd();
+    };
+    bind(); upd();
     $("#q").oninput = e => { qty = Math.max(1, Math.min(20, parseInt(e.target.value) || 1)); upd(); };
     $("#close").onclick = () => $("#sheetHost").innerHTML = "";
     $("#bg").onclick = e => { if(e.target.id === "bg") $("#sheetHost").innerHTML = ""; };
     $("#toDesign").onclick = () => {
-      if(!model){ window.LICO.toast("機種を選んでください"); return; }
-      location.href = `design.html?model=${encodeURIComponent(model)}&qty=${qty}`;
+      if(P.kind === "phone" && !opt){ toast("機種を選んでください"); return; }
+      location.href = `design.html?product=${P.id}&opt=${encodeURIComponent(opt)}&qty=${qty}`;
     };
   }
   $("#startBtn").onclick = open;
+  if(qs.get("open")) open();
 })();
 </script>
 </body>

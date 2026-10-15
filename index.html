@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>LICO PET original｜写真でつくるオリジナルiPhoneケース</title>
-<meta name="description" content="LICO PET original は、福岡市の就労継続支援B型事業所LICO（リコ）が手がけるオンラインショップです。お気に入りの写真で、世界にひとつのiPhoneケースをおつくりします。">
+<title>LICO PET original｜写真でつくるスマホケース・キーケース・名刺入れ</title>
+<meta name="description" content="LICO PET original は、福岡市の就労継続支援B型事業所LICO（リコ）が手がけるオンラインショップです。お気に入りの写真で、世界にひとつのスマホケース・本革キーケース・名刺入れ・インテリアボードをおつくりします。">
 <link rel="canonical" href="https://syurob-lico-fukuoka.github.io/LICO_PET_original/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="LICO PET original">
-<meta property="og:title" content="LICO PET original｜写真でつくるオリジナルiPhoneケース">
-<meta property="og:description" content="お気に入りの写真で、世界にひとつのiPhoneケースを。福岡市の就労継続支援B型事業所LICOがおつくりします。">
+<meta property="og:title" content="LICO PET original｜写真でつくるスマホケース・キーケース・名刺入れ">
+<meta property="og:description" content="お気に入りの写真で、世界にひとつのスマホケースやキーケースを。福岡市の就労継続支援B型事業所LICOがおつくりします。">
 <meta property="og:url" content="https://syurob-lico-fukuoka.github.io/LICO_PET_original/">
 <meta property="og:image" content="https://syurob-lico-fukuoka.github.io/LICO_PET_original/img/sample-work.jpg">
 <meta property="og:locale" content="ja_JP">
@@ -52,6 +52,15 @@ section.sec{padding-block:72px}
 .news li{display:flex;gap:24px;padding:18px 4px;border-bottom:1px solid var(--line);font-size:14px}
 .news time{color:var(--sub);flex-shrink:0}
 @media(max-width:767px){.news li{flex-direction:column;gap:2px}}
+.plist{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.pcard{display:flex;flex-direction:column;gap:8px;color:inherit;text-decoration:none}
+.pcard .ph{aspect-ratio:1;background:#f4f2ee;overflow:hidden}
+.pcard .ph img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.pcard:hover .ph img{transform:scale(1.03)}
+.pcard .s{font-family:var(--f-en);font-size:11px;letter-spacing:.14em;color:var(--accent)}
+.pcard .n{font-size:15px;font-weight:500}
+.pcard .pr{font-family:var(--f-en);font-size:17px}
+.pcard .pr small{font-size:11px;color:var(--sub);margin-left:3px}
 </style>
 </head>
 <body>
@@ -62,24 +71,15 @@ section.sec{padding-block:72px}
   <div>
     <p class="sub">PHOTO CASE SERIES</p>
     <h1>いちばん好きな写真を、<br>毎日持ち歩こう。</h1>
-    <p style="margin-bottom:24px;color:#555">うちの子の写真も、家族の思い出の一枚も。<br>スマホから写真を選ぶだけで、世界にひとつのiPhoneケースができあがります。</p>
-    <a href="product.html" class="btn">ケースをつくる</a>
+    <p style="margin-bottom:24px;color:#555">うちの子の写真も、家族の思い出の一枚も。<br>スマホから写真を選ぶだけで、世界にひとつのスマホケースやキーケースができあがります。</p>
+    <a href="product.html" class="btn">商品を見る</a>
   </div>
 </div></div>
 
 <section class="sec" id="item">
   <div class="wrap">
     <div class="sec-title"><span class="en">ITEM</span><h2>商品</h2></div>
-    <div class="feature">
-      <img src="img/sample-work.jpg" alt="オリジナルケースの見本">
-      <div>
-        <p class="en" style="font-size:12px;color:var(--sub)">PHOTO CASE SERIES</p>
-        <h3 style="font-size:22px;margin-top:4px" id="fName"></h3>
-        <p class="price" id="fPrice"></p>
-        <p style="color:#555;margin-bottom:24px">写真をアップロードして、機種・お名前・書体・文字の色を選ぶだけ。数量を選ぶと金額は自動で計算されます。</p>
-        <a href="product.html" class="btn">注文画面へ</a>
-      </div>
-    </div>
+    <div class="plist" id="plist"></div>
   </div>
 </section>
 
@@ -88,7 +88,7 @@ section.sec{padding-block:72px}
     <div class="sec-title"><span class="en">HOW TO ORDER</span><h2>ご注文の流れ</h2></div>
     <ol class="howto">
       <li><span class="n">STEP 1</span><h3>写真を選ぶ</h3><p>スマホの写真をその場でそのままアップロードします。</p></li>
-      <li><span class="n">STEP 2</span><h3>機種と文字を選ぶ</h3><p>機種を選び、お名前やメッセージを入れたい方は書体と色を選びます。</p></li>
+      <li><span class="n">STEP 2</span><h3>商品と文字を選ぶ</h3><p>商品（スマホケースは機種）を選び、お名前やメッセージを入れたい方は書体と色を選びます。</p></li>
       <li><span class="n">STEP 3</span><h3>お支払い</h3><p>クレジットカード・Apple Pay・Google Payでお支払いいただけます。</p></li>
       <li><span class="n">STEP 4</span><h3>お届け</h3><p>ていねいにおつくりして、1か月ほどで発送します。店頭での受け取りもできます。</p></li>
     </ol>
@@ -101,7 +101,7 @@ section.sec{padding-block:72px}
     <div>
       <span class="en" style="font-size:12px;color:var(--accent)">GIFT</span>
       <h3>誕生日や記念日の、<br>心に残る贈りものに。</h3>
-      <p>家族やペットの写真でつくるケースは、贈った方の思い出もいっしょに届けられます。ご要望欄に「ギフト」とお書きいただければ、価格の入ったものを同封せずにお届けします。</p>
+      <p>家族やペットの写真でつくるアイテムは、贈った方の思い出もいっしょに届けられます。ご要望欄に「ギフト」とお書きいただければ、価格の入ったものを同封せずにお届けします。</p>
       <a href="product.html" class="btn btn-line">ギフトでつくる</a>
     </div>
   </div>
@@ -129,13 +129,16 @@ section.sec{padding-block:72px}
 </section>
 
 <div id="site-footer"></div>
-<script src="js/config.js?v=1013a"></script>
-<script src="js/common.js?v=1013a"></script>
+<script src="js/config.js?v=1015a"></script>
+<script src="js/common.js?v=1015a"></script>
 <script>
   const {S, yen, chrome} = window.LICO;
   chrome();
-  document.getElementById("fName").textContent = S.PRODUCT.name;
-  document.getElementById("fPrice").innerHTML = `${yen(S.PRODUCT.price)}<small>（税込）</small>`;
+  const esc = window.LICO.esc;
+  document.getElementById("plist").innerHTML = S.PRODUCTS.map(p => `<a class="pcard" href="product.html?id=${p.id}">
+    <div class="ph"><img src="${esc(p.images[0])}" alt="${esc(p.name)}の見本" loading="lazy"></div>
+    <span class="s">${esc(p.series)}</span><span class="n">${esc(p.name)}</span>
+    <span class="pr">${p.kind === "variant" ? p.variants.map(v => yen(v.price)).join("〜") : yen(p.price)}<small>（税込）</small></span></a>`).join("");
 </script>
 </body>
 </html>

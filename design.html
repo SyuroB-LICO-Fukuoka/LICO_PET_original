@@ -58,7 +58,7 @@ canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 170px);cursor
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}
 .modal .box{background:#fff;max-width:760px;width:100%;max-height:calc(100vh - 32px);overflow:auto;padding:24px;display:grid;gap:24px}
 @media(min-width:700px){.modal .box{grid-template-columns:240px 1fr}}
-.modal img{width:100%;border-radius:22px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.modal img{width:100%;border-radius:8px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
 .modal h2{font-size:18px;margin-bottom:8px}
 .modal dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:10px 0}
 .modal dt{color:var(--sub)}
@@ -94,32 +94,40 @@ canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 170px);cursor
       <button type="button" id="undo" disabled>↶ 元に戻す</button>
       <button type="button" id="redo" disabled>↷ やり直し</button>
     </div>
-    <canvas id="cv" width="546" height="1056" aria-label="ケースのデザイン"></canvas>
-    <p class="note">ピンクの線の内側がケースになります。カメラの穴の部分は印刷されません。</p>
+    <canvas id="cv" width="546" height="1056" aria-label="デザイン"></canvas>
+    <p class="note" id="shapeNote"></p>
   </main>
 </div>
 <div id="modalHost"></div>
 
-<script src="js/config.js?v=1013a"></script>
-<script src="js/common.js?v=1013a"></script>
+<script src="js/config.js?v=1015a"></script>
+<script src="js/models.js?v=1015a"></script>
+<script src="js/common.js?v=1015a"></script>
 <script>
 (() => {
-const {S, yen, esc, getCart, setCart, api, loadImage, toJpeg, toast, isCafe, qs} = window.LICO;
-const P = S.PRODUCT;
+const {S, yen, esc, getCart, setCart, api, loadImage, toJpeg, toast, isCafe, qs, product, shapeOf, shapePath} = window.LICO;
+const P = S.DESIGN;
 
-/* ===== 印刷サイズと表示 =====
-   印刷用：1092 × 2112 px（ケース1枚分）。画面では半分の大きさで表示 */
-const PW = 1092, PH = 2112, VIEW = 0.5;
+/* ===== 商品・印刷サイズと表示 =====
+   印刷用の大きさ（px）と形は商品ごと・スマホは機種ごとに変わる（common.js の shapeOf） */
+const productId = qs.get("product") || (qs.get("model") ? "phone" : "");
+const PR = product(productId);
+const opt = qs.get("opt") || qs.get("model") || "", qty = Math.max(1, Math.min(20, parseInt(qs.get("qty")) || 1));
+if(!productId || (PR.kind !== "none" && !opt)){ location.replace("product.html" + (productId ? "?id=" + productId : "")); return; }
+const SH = shapeOf(PR.id, opt);
+const PW = SH.w, PH = SH.h, VIEW = Math.min(546 / PW, 1056 / PH, .8), U = Math.min(PW, PH) / 1092;
 const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
-const CASE = { r: 150, cam: { x: 60, y: 60, w: 430, h: 470, r: 110 } }; // 角の丸み・カメラの穴（印刷サイズの座標）
-
-const model = qs.get("model") || "", qty = Math.max(1, Math.min(20, parseInt(qs.get("qty")) || 1));
-if(!model){ location.replace("product.html"); return; }
-document.getElementById("modelLabel").textContent = `${model} 対応｜${qty}個`;
+cv.width = Math.round(PW * VIEW); cv.height = Math.round(PH * VIEW);
+const variant = PR.kind === "variant" ? (PR.variants.find(v => v.id === opt) || PR.variants[0]) : null;
+const optLabel = variant ? variant.label : opt;
+const unit = variant ? variant.price : PR.price;
+document.getElementById("modelLabel").textContent = `${PR.short}${optLabel ? "｜" + optLabel : ""}｜${qty}個`;
+document.getElementById("shapeNote").textContent = PR.kind === "phone" ? "ピンクの線の内側がケースになります。カメラの穴の部分は印刷されません（形は目安です）。"
+  : SH.kind === "board" ? "ピンクの線の内側が木のボードです。上の丸い穴の部分は印刷されません。" : "ピンクの線の内側が印刷される面です。";
 if(isCafe()) document.getElementById("cafeBar").innerHTML = `<div class="mode-bar">店頭受付モード（カフェ）</div>`;
 
 /* ===== デザインの状態 ===== */
-let st = { bg: "#ffffff", photo: null, texts: [] };   // photo: {src, fileId, x, y, scale, rot, w, h}
+let st = { bg: SH.base ? null : "#ffffff", photo: null, texts: [] };   // bg が null＝素材の色のまま（印刷しない）   // photo: {src, fileId, x, y, scale, rot, w, h}
 let sel = "photo";                                     // 選んでいるもの："photo" または テキストの番号
 let img = null, origImg = null, cut = false, cutting = false, uploading = false, photoFileId = "";
 const hist = [], future = [];
@@ -131,15 +139,12 @@ document.getElementById("undo").onclick = () => { if(!hist.length) return; futur
 document.getElementById("redo").onclick = () => { if(!future.length) return; hist.push(snap()); restore(future.pop()); };
 
 /* ===== 描画 ===== */
-function caseClip(c, s){
-  const r = CASE.r * s; c.beginPath(); c.roundRect(0, 0, PW * s, PH * s, r);
-}
-function camPath(c, s){
-  const k = CASE.cam; c.beginPath(); c.roundRect(k.x * s, k.y * s, k.w * s, k.h * s, k.r * s);
-}
+function caseClip(c, s){ shapePath(c, SH, s); }
+function camPath(c, s){ c.beginPath(); SH.holes.forEach(k => c.roundRect(k.x * s, k.y * s, k.w * s, k.h * s, Math.min(k.r, k.w / 2, k.h / 2) * s)); }
 function paint(c, s, forPrint){
   c.save(); caseClip(c, s); c.clip();
-  c.fillStyle = st.bg; c.fillRect(0, 0, PW * s, PH * s);
+  if(st.bg){ c.fillStyle = st.bg; c.fillRect(0, 0, PW * s, PH * s); }
+  else if(!forPrint && SH.base){ c.fillStyle = SH.base; c.fillRect(0, 0, PW * s, PH * s); }
   if(st.photo && img){
     const p = st.photo;
     c.save(); c.translate(p.x * s, p.y * s); c.rotate(p.rot * Math.PI / 180); c.scale(p.scale * s, p.scale * s);
@@ -154,7 +159,7 @@ function paint(c, s, forPrint){
   });
   c.restore();
   if(!forPrint){
-    c.save(); camPath(c, s); c.fillStyle = "rgba(40,40,40,.78)"; c.fill(); c.restore();          // カメラの穴
+    if(SH.holes.length){ c.save(); camPath(c, s); c.fillStyle = SH.kind === "board" ? "#f1f0ed" : "rgba(40,40,40,.78)"; c.fill(); c.restore(); }  // カメラの穴・掛ける穴
     c.save(); caseClip(c, s); c.lineWidth = 2; c.strokeStyle = "#e5007f"; c.stroke(); c.restore();  // ケースの線
     // 選んでいるものの枠
     const b = bounds(sel);
@@ -175,7 +180,7 @@ function draw(){
   ctx.clearRect(0, 0, cv.width, cv.height);
   if(!st.photo){ // 写真がないときの案内
     paint(ctx, VIEW, false);
-    ctx.save(); ctx.fillStyle = "#8d887e"; ctx.font = "15px 'Noto Sans JP'"; ctx.textAlign = "center";
+    ctx.save(); ctx.fillStyle = SH.base && !st.bg && /^#[0-4]/.test(SH.base) ? "#dddddd" : "#8d887e"; ctx.font = "15px 'Noto Sans JP'"; ctx.textAlign = "center";
     ctx.fillText("左の「写真をえらぶ」から", cv.width / 2, cv.height / 2 - 10); ctx.fillText("写真を入れてください", cv.width / 2, cv.height / 2 + 14); ctx.restore();
     return;
   }
@@ -290,7 +295,7 @@ function renderPanel(){
       <p class="help">写真はこの画面で送信します（あとから送ることはできません）。明るく、ピントの合った写真がきれいに仕上がります。</p>
       ${has ? `<div class="row"><label for="sc">大きさ</label><input type="range" id="sc" min="5" max="400" value="${Math.round(st.photo.scale * 100)}"></div>
       <div class="row"><label for="rt">回転</label><input type="range" id="rt" min="-180" max="180" value="${Math.round(st.photo.rot)}"></div>
-      <div class="btns"><button type="button" id="fit">ケース全体に合わせる</button><button type="button" id="ctr">中央にそろえる</button><button type="button" id="r90">90°回す</button></div>
+      <div class="btns"><button type="button" id="fit">全体に合わせる</button><button type="button" id="ctr">中央にそろえる</button><button type="button" id="r90">90°回す</button></div>
       <div class="row"><label>背景透過</label>
         <div class="btns">${cut ? `<button type="button" id="uncut">背景を元に戻す</button>` : `<button type="button" id="cut" ${cutting ? "disabled" : ""}>${cutting ? "背景を消しています…" : "背景を消す（透過）"}</button>`}</div>
         <p class="help" id="cutState">${cut ? "背景を消しました。左の「背景色」から好きな色を選べます。" : "ペットや人だけを切り抜きます。はじめて使うときは準備に30秒〜1分ほどかかります。"}</p></div>
@@ -323,7 +328,7 @@ function renderPanel(){
       <p class="help">文字は指やマウスでドラッグして動かせます。</p>` : `<p class="help">お名前や日付、短いメッセージを入れられます（入れなくても作れます）。</p>`}`;
     panel.querySelector("#addT").onclick = () => {
       if(st.texts.length >= 3){ toast("文字は3つまで入れられます"); return; }
-      push(); st.texts.push({ text: "MOMO", font: "dancing", color: "#ffffff", size: 150, x: PW / 2, y: PH * .82, rot: 0, shadow: true });
+      push(); st.texts.push({ text: "MOMO", font: "dancing", color: "#ffffff", size: Math.round(150 * U), x: PW / 2, y: PH * .82, rot: 0, shadow: true });
       sel = st.texts.length - 1; draw(); renderPanel();
     };
     if(t){
@@ -342,9 +347,11 @@ function renderPanel(){
       panel.querySelector("#tdel").onclick = () => { push(); st.texts.splice(i, 1); sel = st.photo ? "photo" : null; draw(); renderPanel(); };
     }
   } else if(tool === "bg"){
-    panel.innerHTML = `<h2>背景色</h2><p class="help">写真がケース全体をおおっていないときに見える色です。</p>
+    panel.innerHTML = `<h2>背景色</h2><p class="help">写真が全体をおおっていないときに見える色です。</p>
+      ${SH.base ? `<div class="btns"><button type="button" id="bgNone" ${st.bg ? "" : 'style="border-color:var(--text);background:#f7f6f3"'}>${esc(SH.baseLabel)}</button></div>` : ""}
       <div class="swatch bg100" id="bgs">${BG.map(c => `<button type="button" data-c="${c}" aria-pressed="${c === st.bg}" style="background:${c}" aria-label="${c}"></button>`).join("")}</div>
-      <div class="row"><label for="bgFree">ほかの色を自由に選ぶ</label><input type="color" id="bgFree" value="${st.bg}"></div>`;
+      <div class="row"><label for="bgFree">ほかの色を自由に選ぶ</label><input type="color" id="bgFree" value="${st.bg || "#ffffff"}"></div>`;
+    const bn = panel.querySelector("#bgNone"); if(bn) bn.onclick = () => { push(); st.bg = null; draw(); renderPanel(); };
     panel.querySelectorAll("#bgs button").forEach(b => b.onclick = () => { push(); st.bg = b.dataset.c; draw(); renderPanel(); });
     panel.querySelector("#bgFree").onchange = e => { push(); st.bg = e.target.value; draw(); renderPanel(); };
   } else {
@@ -366,27 +373,28 @@ document.getElementById("confirmBtn").onclick = () => {
   if(!photoFileId){ toast("写真の送信に失敗しています。写真を選び直してください"); return; }
   const out = document.createElement("canvas"); out.width = PW; out.height = PH;
   const oc = out.getContext("2d"); paint(oc, 1, true);
-  const full = out.toDataURL("image/jpeg", .95);
-  const prev = document.createElement("canvas"); prev.width = 273; prev.height = 528;
+  const png = !st.bg;   // 素材の色を残すときは、何も印刷しない部分を透明にする
+  const full = out.toDataURL(png ? "image/png" : "image/jpeg", .95);
+  const prev = document.createElement("canvas"); prev.width = Math.round(PW * .25); prev.height = Math.round(PH * .25);
   const pc = prev.getContext("2d"); paint(pc, .25, false);
   const thumb = prev.toDataURL("image/jpeg", .85);
   const host = document.getElementById("modalHost");
   host.innerHTML = `<div class="modal" id="md"><div class="box">
     <img src="${thumb}" alt="できあがりイメージ">
     <div><h2>デザインの確認</h2>
-      <dl><dt>商品</dt><dd>${esc(P.name)}</dd><dt>機種</dt><dd>${esc(model)}</dd><dt>数量</dt><dd>${qty}個</dd>
+      <dl><dt>商品</dt><dd>${esc(PR.name)}</dd>${PR.optionLabel ? `<dt>${esc(PR.optionLabel)}</dt><dd>${esc(optLabel)}</dd>` : ""}<dt>数量</dt><dd>${qty}個</dd>
       <dt>文字</dt><dd>${st.texts.length ? st.texts.map(t => esc(t.text)).join("／") : "なし"}</dd><dt>背景透過</dt><dd>${cut ? "あり" : "なし"}</dd>
-      <dt>金額</dt><dd><b>${yen(P.price * qty)}</b>（税込）</dd></dl>
-      <p class="help">画面の色と実際の仕上がりは少し異なることがあります。カメラの穴の部分は印刷されません。</p>
+      <dt>金額</dt><dd><b>${yen(unit * qty)}</b>（税込）</dd></dl>
+      <p class="help">画面の色と実際の仕上がりは少し異なることがあります。${PR.kind === "phone" ? "カメラの穴の部分は印刷されません。" : esc(PR.note || "")}</p>
       <div class="act"><button class="btn" type="button" id="toCart">この内容でカートに入れる</button><button class="btn btn-line" type="button" id="back">デザインを直す</button></div>
       <p class="state" id="mdState"></p></div></div></div>`;
   host.querySelector("#back").onclick = () => host.innerHTML = "";
   host.querySelector("#toCart").onclick = async e => {
     e.target.disabled = true; document.getElementById("mdState").textContent = "できあがり画像を送っています…";
     try{
-      const r = await api({ action: "uploadPhoto", name: "design.jpg", data: full.split(",")[1] });
+      const r = await api({ action: "uploadPhoto", name: png ? "design.png" : "design.jpg", mime: png ? "image/png" : "image/jpeg", data: full.split(",")[1] });
       const cart = getCart();
-      cart.push({ key: Date.now().toString(36), model, qty, fileId: photoFileId, designFileId: r.fileId, thumb,
+      cart.push({ key: Date.now().toString(36), productId: PR.id, option: optLabel, variant: variant ? variant.id : "", model: optLabel || PR.short, qty, fileId: photoFileId, designFileId: r.fileId, thumb,
         cut, text: st.texts.map(t => t.text).join("／"), font: st.texts.map(t => (P.fonts.find(f => f.id === t.font) || {}).label).join("／"),
         color: st.texts.map(t => colorName(t.color)).join("／") });
       setCart(cart); location.href = "cart.html?added=1";
