@@ -18,8 +18,9 @@
 </main>
 <div id="site-footer"></div>
 
-<script src="js/config.js?v=1015d"></script>
-<script src="js/common.js?v=1015d"></script>
+<script src="js/config.js?v=1015e"></script>
+<script src="js/common.js?v=1015e"></script>
+<script src="js/chatbot.js?v=1015e" defer></script>
 <script>
 (() => {
   const {S, yen, esc, isCafe, cafeId, getCart, setCart, subtotal, shipping, api, toast, chrome, qs, product, unitPrice, optionText} = window.LICO;
@@ -78,7 +79,7 @@
           <div class="fld"><label for="c-zip">郵便番号<span class="req">必須</span></label><input type="text" id="c-zip" inputmode="numeric" autocomplete="postal-code" placeholder="819-0161" value="${esc(f.zip)}"></div>
           <div class="fld" style="grid-column:1/-1"><label for="c-addr">住所<span class="req">必須</span></label><input type="text" id="c-addr" autocomplete="street-address" value="${esc(f.address)}"></div>
         </div>`:(cafe?`<p class="info">受け取り場所：ご注文いただいたカフェ。できあがり次第ご連絡します。</p>`:`<p class="info">受け取り場所：店頭（福岡市西区今宿東1丁目19-14）。できあがり次第ご連絡します。</p>`)}
-        <div class="fld"><label for="c-note">ご要望など<span class="opt">任意</span></label><textarea id="c-note" rows="3" placeholder="写真の向きや、文字の位置のご希望など">${esc(f.note)}</textarea></div>
+        <div class="fld"><label for="c-note">ご要望など<span class="opt">任意</span></label><textarea id="c-note" rows="3">${esc(f.note)}</textarea></div>
         <div class="totals">
           <div><span>商品小計（${cart.reduce((a,i)=>a+i.qty,0)}個）</span><span>${yen(sub)}</span></div>
           <div><span>送料</span><span>${ship?yen(ship):"無料"}</span></div>

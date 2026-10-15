@@ -66,7 +66,7 @@ window.LICO_SHOP = {
       id: "phone", kind: "phone", series: "PHOTO CASE SERIES",
       name: "写真でつくるオリジナルスマホケース", short: "スマホケース", price: 5500,
       lead: "お気に入りの写真が、世界にひとつのスマホケースに。\niPhoneはもちろん、Galaxy・Xperia・AQUOS・Pixelなど600機種以上からお選びいただけます。",
-      images: ["img/phonecase.jpg"], optionLabel: "機種",
+      images: ["img/phonecase.jpg?v=1015e"], optionLabel: "機種",
       // ケースの色（ハードケース）。clear＝透明：写真を置かない部分は透けて見える
       caseColors: [
         { id: "white", label: "白", hex: "#ffffff" },
@@ -80,7 +80,7 @@ window.LICO_SHOP = {
       id: "keycase", kind: "color", series: "LEATHER SERIES",
       name: "写真でつくる本革キーケース", short: "キーケース", price: 5500,
       lead: "毎日持ち歩く鍵を、うちの子の写真といっしょに。\nやわらかな牛本革のキーケースに、写真や名前をプリントします。",
-      images: ["img/keycase.jpg"], optionLabel: "色",
+      images: ["img/keycase.jpg?v=1015e"], optionLabel: "色",
       size: "縦 約10cm × 横 約5.5cm × 厚さ 約2cm（キーフック6連・ナスカン付き）",
       points: ["牛本革・男女兼用", "全12色から選べます", "表面に写真と文字をプリント"],
       colors: [
@@ -96,7 +96,7 @@ window.LICO_SHOP = {
       id: "cardcase", kind: "variant", series: "CARD CASE SERIES",
       name: "写真でつくるメタル名刺入れ", short: "名刺入れ", price: 4400,
       lead: "ステンレスの名刺入れに、好きな写真をプリント。\n名刺を渡すたびに話がはずむ、自分だけの名刺入れです。",
-      images: ["img/cardcase.jpg"], optionLabel: "仕上げ",
+      images: ["img/cardcase.jpg?v=1015e"], optionLabel: "仕上げ",
       variants: [
         { id: "2d", label: "2D（平面プリント）", price: 4400, desc: "写真をそのままきれいに印刷します" },
         { id: "3d", label: "3D（立体プリント）", price: 5500, desc: "インクを重ねて盛り上げ、さわると凹凸のある仕上がりにします" }
@@ -109,7 +109,7 @@ window.LICO_SHOP = {
       id: "interior", kind: "none", series: "INTERIOR SERIES",
       name: "写真でつくるインテリアボード", short: "インテリアボード", price: 4400,
       lead: "お部屋に飾れる、木のボードに写真をプリント。\n愛車やペット、家族の写真を、木目をいかしたやさしい風合いで仕上げます。",
-      images: ["img/interior.jpg"], optionLabel: "",
+      images: ["img/interior.jpg?v=1015e"], optionLabel: "",
       points: ["木製（持ち手と穴つきで、壁に掛けられます）", "木目がうっすら見える仕上がり", "プレゼントにもおすすめ"],
       print: { w: 1200, h: 1960, shape: "board", base: "#ece6dc", baseLabel: "木の地のまま（印刷しない）" },
       note: "木目が透けて見えるため、写真は少し落ち着いた色合いになります。"
