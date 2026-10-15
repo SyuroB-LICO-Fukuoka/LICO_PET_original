@@ -80,7 +80,7 @@ window.LICO_SHOP = {
       id: "keycase", kind: "color", series: "LEATHER SERIES",
       name: "写真でつくる本革キーケース", short: "キーケース", price: 5500,
       lead: "毎日持ち歩く鍵を、うちの子の写真といっしょに。\nやわらかな牛本革のキーケースに、写真や名前をプリントします。",
-      images: ["img/keycase.svg"], optionLabel: "色",
+      images: ["img/keycase.jpg"], optionLabel: "色",
       size: "縦 約10cm × 横 約5.5cm × 厚さ 約2cm（キーフック6連・ナスカン付き）",
       points: ["牛本革・男女兼用", "全12色から選べます", "表面に写真と文字をプリント"],
       colors: [
