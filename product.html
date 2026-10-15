@@ -69,9 +69,9 @@
 <div id="site-footer"></div>
 <div id="sheetHost"></div>
 
-<script src="js/config.js?v=1015b"></script>
-<script src="js/models.js?v=1015b"></script>
-<script src="js/common.js?v=1015b"></script>
+<script src="js/config.js?v=1015c"></script>
+<script src="js/models.js?v=1015c"></script>
+<script src="js/common.js?v=1015c"></script>
 <script>
 (() => {
   const {S, yen, esc, chrome, qs, product, shapeIcon, toast} = window.LICO;
@@ -123,9 +123,11 @@
   /* ===== 選択シート（機種・色・仕上げ と 数量） ===== */
   const M = window.LICO_MODELS;
   let opt = P.kind === "variant" ? P.variants[0].id : (P.kind === "color" ? P.colors[0].label : ""), qty = 1, tab = 0, word = "";
+  let cc = (P.caseColors || [])[0] ? P.caseColors[0].id : "";   // スマホケースの色（白・黒・透明）
+  const ccLabel = () => ((P.caseColors || []).find(c => c.id === cc) || {}).label || "";
   const unit = () => P.kind === "variant" ? (P.variants.find(v => v.id === opt) || P.variants[0]).price : P.price;
-  const optLabel = () => P.kind === "variant" ? (P.variants.find(v => v.id === opt) || {}).label : opt;
-  const phoneBtn = m => `<button type="button" data-m="${esc(m.n)}" aria-pressed="${m.n === opt}">${shapeIcon("phone", m.n, 64)}${esc(m.n)}</button>`;
+  const optLabel = () => P.kind === "variant" ? (P.variants.find(v => v.id === opt) || {}).label : (opt && cc ? opt + "／" + ccLabel() : opt);
+  const phoneBtn = m => `<button type="button" data-m="${esc(m.n)}" aria-pressed="${m.n === opt}">${shapeIcon("phone", m.n, 64, cc)}${esc(m.n)}</button>`;
   function modelList(){
     if(word){
       const w = word.toLowerCase().replace(/\s+/g, ""), hits = [];
@@ -135,7 +137,9 @@
     return M.groups[tab].subs.map(s => `<div class="mgroup">${s.label ? `<h3>${esc(s.label)}</h3>` : ""}<div class="models">${s.models.map(phoneBtn).join("")}</div></div>`).join("");
   }
   function chooser(){
-    if(P.kind === "phone") return `<p class="help" style="font-size:13px;color:var(--sub)">お使いのスマホの機種を選んでください。絵はカメラの位置の目安です。</p>
+    if(P.kind === "phone") return `<p class="help" style="font-size:13px;color:var(--sub)">ハードケースの色を選んでください。</p>
+      <div class="tabs" id="ccs">${P.caseColors.map(c => `<button type="button" data-cc="${c.id}" aria-pressed="${c.id === cc}"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid #999;vertical-align:-1px;margin-right:6px;background:${c.hex === "clear" ? "linear-gradient(135deg,#fff 45%,#cfd8dc 55%)" : c.hex}"></span>${esc(c.label)}</button>`).join("")}</div>
+      <p class="help" style="font-size:13px;color:var(--sub)">お使いのスマホの機種を選んでください。絵はカメラの位置の目安です。</p>
       <input type="search" class="msearch" id="msearch" placeholder="機種名で探す（例：iPhone 16、Galaxy S24、SO-51E）" value="${esc(word)}">
       <div class="tabs" id="tabs">${M.groups.map((g, i) => `<button type="button" data-t="${i}" aria-pressed="${!word && i === tab}">${esc(g.label)}</button>`).join("")}</div>
       <div class="mlist" id="models">${modelList()}</div>`;
@@ -157,6 +161,7 @@
     const upd = () => { $("#qm").textContent = P.optionLabel ? (optLabel() || "—") : P.short; $("#qu").textContent = yen(unit()); $("#qs").textContent = yen(unit() * qty); $("#qt").textContent = yen(unit() * qty); };
     const bind = () => {
       const ms = $("#msearch"); if(ms){ ms.oninput = () => { word = ms.value.trim(); $("#models").innerHTML = modelList(); document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-pressed", !word && +b.dataset.t === tab)); }; }
+      const cs = $("#ccs"); if(cs) cs.onclick = e => { const b = e.target.closest("button"); if(!b) return; cc = b.dataset.cc; const keep = $("#models").scrollTop; $("#chooser").innerHTML = chooser(); bind(); $("#models").scrollTop = keep; upd(); };
       const tb = $("#tabs"); if(tb) tb.onclick = e => { const b = e.target.closest("button"); if(!b) return; tab = +b.dataset.t; word = ""; $("#chooser").innerHTML = chooser(); bind(); };
     };
     $("#chooser").onclick = e => {
@@ -170,7 +175,7 @@
     $("#bg").onclick = e => { if(e.target.id === "bg") $("#sheetHost").innerHTML = ""; };
     $("#toDesign").onclick = () => {
       if(P.kind === "phone" && !opt){ toast("機種を選んでください"); return; }
-      location.href = `design.html?product=${P.id}&opt=${encodeURIComponent(opt)}&qty=${qty}`;
+      location.href = `design.html?product=${P.id}&opt=${encodeURIComponent(opt)}${cc ? "&cc=" + cc : ""}&qty=${qty}`;
     };
   }
   $("#startBtn").onclick = open;

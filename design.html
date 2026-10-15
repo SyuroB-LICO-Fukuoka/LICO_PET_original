@@ -100,9 +100,9 @@ canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 170px);cursor
 </div>
 <div id="modalHost"></div>
 
-<script src="js/config.js?v=1015b"></script>
-<script src="js/models.js?v=1015b"></script>
-<script src="js/common.js?v=1015b"></script>
+<script src="js/config.js?v=1015c"></script>
+<script src="js/models.js?v=1015c"></script>
+<script src="js/common.js?v=1015c"></script>
 <script>
 (() => {
 const {S, yen, esc, getCart, setCart, api, loadImage, toJpeg, toast, isCafe, qs, product, shapeOf, shapePath} = window.LICO;
@@ -114,14 +114,15 @@ const productId = qs.get("product") || (qs.get("model") ? "phone" : "");
 const PR = product(productId);
 const opt = qs.get("opt") || qs.get("model") || "", qty = Math.max(1, Math.min(20, parseInt(qs.get("qty")) || 1));
 if(!productId || (PR.kind !== "none" && !opt)){ location.replace("product.html" + (productId ? "?id=" + productId : "")); return; }
-const SH = shapeOf(PR.id, opt);
+const ccId = qs.get("cc") || "", CC = (PR.caseColors || []).find(c => c.id === ccId) || null;   // スマホケースの色
+const SH = shapeOf(PR.id, opt, ccId);
 const PW = SH.w, PH = SH.h, VIEW = Math.min(546 / PW, 1056 / PH, .8), U = Math.min(PW, PH) / 1092;
 const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
 cv.width = Math.round(PW * VIEW); cv.height = Math.round(PH * VIEW);
 const variant = PR.kind === "variant" ? (PR.variants.find(v => v.id === opt) || PR.variants[0]) : null;
 const optLabel = variant ? variant.label : opt;
 const unit = variant ? variant.price : PR.price;
-document.getElementById("modelLabel").textContent = `${PR.short}${optLabel ? "｜" + optLabel : ""}｜${qty}個`;
+document.getElementById("modelLabel").textContent = `${PR.short}${optLabel ? "｜" + optLabel : ""}${CC ? "｜ケース：" + CC.label : ""}｜${qty}個`;
 document.getElementById("shapeNote").textContent = PR.kind === "phone" ? "ピンクの線の内側がケースになります。カメラの穴の部分は印刷されません（形は目安です）。"
   : SH.kind === "board" ? "ピンクの線の内側が木のボードです。上の丸い穴の部分は印刷されません。" : "ピンクの線の内側が印刷される面です。";
 if(isCafe()) document.getElementById("cafeBar").innerHTML = `<div class="mode-bar">店頭受付モード（カフェ）</div>`;
@@ -144,6 +145,9 @@ function camPath(c, s){ c.beginPath(); SH.holes.forEach(k => c.roundRect(k.x * s
 function paint(c, s, forPrint){
   c.save(); caseClip(c, s); c.clip();
   if(st.bg){ c.fillStyle = st.bg; c.fillRect(0, 0, PW * s, PH * s); }
+  else if(!forPrint && SH.base === "clear"){   // 透明ケース：市松もようで透けていることを表す
+    const g = 24 * s; for(let y = 0; y * g < PH * s; y++) for(let x = 0; x * g < PW * s; x++){ c.fillStyle = (x + y) % 2 ? "#e9edf0" : "#f8fafb"; c.fillRect(x * g, y * g, g, g); }
+  }
   else if(!forPrint && SH.base){ c.fillStyle = SH.base; c.fillRect(0, 0, PW * s, PH * s); }
   if(st.photo && img){
     const p = st.photo;
@@ -382,7 +386,7 @@ document.getElementById("confirmBtn").onclick = () => {
   host.innerHTML = `<div class="modal" id="md"><div class="box">
     <img src="${thumb}" alt="できあがりイメージ">
     <div><h2>デザインの確認</h2>
-      <dl><dt>商品</dt><dd>${esc(PR.name)}</dd>${PR.optionLabel ? `<dt>${esc(PR.optionLabel)}</dt><dd>${esc(optLabel)}</dd>` : ""}<dt>数量</dt><dd>${qty}個</dd>
+      <dl><dt>商品</dt><dd>${esc(PR.name)}</dd>${PR.optionLabel ? `<dt>${esc(PR.optionLabel)}</dt><dd>${esc(optLabel)}</dd>` : ""}${CC ? `<dt>ケースの色</dt><dd>${esc(CC.label)}</dd>` : ""}<dt>数量</dt><dd>${qty}個</dd>
       <dt>文字</dt><dd>${st.texts.length ? st.texts.map(t => esc(t.text)).join("／") : "なし"}</dd><dt>背景透過</dt><dd>${cut ? "あり" : "なし"}</dd>
       <dt>金額</dt><dd><b>${yen(unit * qty)}</b>（税込）</dd></dl>
       <p class="help">画面の色と実際の仕上がりは少し異なることがあります。${PR.kind === "phone" ? "カメラの穴の部分は印刷されません。" : esc(PR.note || "")}</p>
@@ -394,7 +398,7 @@ document.getElementById("confirmBtn").onclick = () => {
     try{
       const r = await api({ action: "uploadPhoto", name: png ? "design.png" : "design.jpg", mime: png ? "image/png" : "image/jpeg", data: full.split(",")[1] });
       const cart = getCart();
-      cart.push({ key: Date.now().toString(36), productId: PR.id, option: optLabel, variant: variant ? variant.id : "", model: optLabel || PR.short, qty, fileId: photoFileId, designFileId: r.fileId, thumb,
+      cart.push({ key: Date.now().toString(36), productId: PR.id, option: optLabel, caseColor: CC ? CC.label : "", variant: variant ? variant.id : "", model: optLabel || PR.short, qty, fileId: photoFileId, designFileId: r.fileId, thumb,
         cut, text: st.texts.map(t => t.text).join("／"), font: st.texts.map(t => (P.fonts.find(f => f.id === t.font) || {}).label).join("／"),
         color: st.texts.map(t => colorName(t.color)).join("／") });
       setCart(cart); location.href = "cart.html?added=1";

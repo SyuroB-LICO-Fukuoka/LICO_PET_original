@@ -66,8 +66,14 @@ window.LICO_SHOP = {
       id: "phone", kind: "phone", series: "PHOTO CASE SERIES",
       name: "写真でつくるオリジナルスマホケース", short: "スマホケース", price: 5500,
       lead: "お気に入りの写真が、世界にひとつのスマホケースに。\niPhoneはもちろん、Galaxy・Xperia・AQUOS・Pixelなど600機種以上からお選びいただけます。",
-      images: ["img/sample-work.jpg"], optionLabel: "機種",
-      points: ["iPhone・Android 600機種以上に対応", "画面の上で、写真の位置・大きさ・向きを自由に決められます", "機種ごとのカメラの位置に合わせた形で確認できます"],
+      images: ["img/phonecase.jpg"], optionLabel: "機種",
+      // ケースの色（ハードケース）。clear＝透明：写真を置かない部分は透けて見える
+      caseColors: [
+        { id: "white", label: "白", hex: "#ffffff" },
+        { id: "black", label: "黒", hex: "#1f1f1f" },
+        { id: "clear", label: "透明", hex: "clear" }
+      ],
+      points: ["ハードケースの色は 白・黒・透明 から選べます", "iPhone・Android 600機種以上に対応", "画面の上で、写真の位置・大きさ・向きを自由に決められます", "機種ごとのカメラの位置に合わせた形で確認できます"],
       note: "ケースの形とカメラの位置は目安です。印刷はカメラの穴をよけて仕上げます。"
     },
     {

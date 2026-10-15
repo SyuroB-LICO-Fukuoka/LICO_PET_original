@@ -23,18 +23,20 @@
   /* 商品と値段（カートの中身は以前のiPhoneケースだけの形式も読めるようにする） */
   const product = id => S.PRODUCTS.find(p=>p.id===id) || S.PRODUCTS[0];
   const unitPrice = i => { const p=product(i.productId||"phone"); if(p.kind==="variant"){ const v=(p.variants||[]).find(x=>x.id===i.variant); return v?v.price:p.price; } return p.price; };
-  const optionText = i => i.option || i.model || "";
+  const optionText = i => (i.option || i.model || "") + (i.caseColor ? "／ケース：" + i.caseColor : "");
   const subtotal = () => getCart().reduce((a,i)=>a+unitPrice(i)*(i.qty||0),0);
 
   /* 印刷する形（印刷用の座標・px）。スマホは機種ごとにカメラの穴の位置が変わる */
   const phoneModel = name => { const M=window.LICO_MODELS; if(!M) return null; for(const g of M.groups) for(const s of g.subs) for(const m of s.models) if(m.n===name) return m; return null; };
-  function shapeOf(productId, option){
+  function shapeOf(productId, option, caseColor){
     const p = product(productId);
     if(p.kind==="phone"){
       const m = phoneModel(option) || { s:"sq", a:1.94 };
       const w = 1092, h = Math.round(w*(m.a||1.94));
       const holes = ((window.LICO_MODELS||{}).shapes||{})[m.s] || [[.055,.028,.40,.43,.11]];
-      return { w, h, kind:"round", r:150, holes: holes.map(([x,y,hw,hh,r])=>({x:x*w,y:y*w,w:hw*w,h:hh*w,r:r*w})), base:null, baseLabel:"" };
+      const cc = (p.caseColors||[]).find(c=>c.id===caseColor);
+      return { w, h, kind:"round", r:150, holes: holes.map(([x,y,hw,hh,r])=>({x:x*w,y:y*w,w:hw*w,h:hh*w,r:r*w})),
+        base: cc ? cc.hex : null, baseLabel: cc ? `ケースの色（${cc.label}）のまま（印刷しない）` : "" };
     }
     const pr = p.print || { w:1100, h:1100, shape:"round", r:40 };
     let base = pr.base || null;
@@ -54,11 +56,11 @@
     } else c.roundRect(0, 0, sh.w*s, sh.h*s, (sh.r||0)*s);
   }
   /* 機種・商品の小さな絵（SVG） */
-  function shapeIcon(productId, option, px){
-    const sh = shapeOf(productId, option), k = (px||60)/Math.max(sh.w, sh.h), W=sh.w*k, H=sh.h*k;
+  function shapeIcon(productId, option, px, caseColor){
+    const sh = shapeOf(productId, option, caseColor), k = (px||60)/Math.max(sh.w, sh.h), W=sh.w*k, H=sh.h*k;
     const holes = sh.holes.map(h=>`<rect x="${Math.max(0,h.x*k).toFixed(1)}" y="${(h.y*k).toFixed(1)}" width="${Math.min(W,h.w*k).toFixed(1)}" height="${(h.h*k).toFixed(1)}" rx="${(h.r*k).toFixed(1)}" fill="#555"/>`).join("");
     const body = sh.kind==="board" ? `<path d="M${390*k} ${220*k} A${210*k} ${210*k} 0 0 1 ${810*k} ${220*k} L${810*k} ${560*k} C${810*k} ${700*k} ${W} ${640*k} ${W} ${800*k} L${W} ${H} L0 ${H} L0 ${800*k} C0 ${640*k} ${390*k} ${700*k} ${390*k} ${560*k} Z" fill="${sh.base||"#fff"}" stroke="#333" stroke-width="1.2"/>`
-      : `<rect x="0.6" y="0.6" width="${(W-1.2).toFixed(1)}" height="${(H-1.2).toFixed(1)}" rx="${((sh.r||0)*k).toFixed(1)}" fill="${sh.base||"#fff"}" stroke="#333" stroke-width="1.2"/>`;
+      : `<rect x="0.6" y="0.6" width="${(W-1.2).toFixed(1)}" height="${(H-1.2).toFixed(1)}" rx="${((sh.r||0)*k).toFixed(1)}" fill="${sh.base==="clear"?"#e8eef2":(sh.base||"#fff")}" stroke="#333" stroke-width="1.2"/>`;
     return `<svg viewBox="0 0 ${W.toFixed(1)} ${H.toFixed(1)}" width="${W.toFixed(0)}" height="${H.toFixed(0)}" aria-hidden="true">${body}${holes}</svg>`;
   }
   const shipping = delivery => (delivery==="pickup" || isCafe()) ? 0 : (S.SHIPPING_FEE||0);
