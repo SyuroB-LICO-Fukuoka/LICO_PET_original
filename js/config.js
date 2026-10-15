@@ -1,5 +1,5 @@
 /* ============================================================
-   LICO PET original ショップ設定
+   ITTENMON ショップ設定
    ・商品名、価格、色、書体などはここを書き換えます
    ・価格を変えたときは、GAS（Code.gs）の CONFIG.PRODUCTS も同じ金額にしてください
    ・スマホケースの機種一覧は js/models.js にあります
@@ -8,7 +8,7 @@ window.LICO_SHOP = {
   // GASのウェブアプリURL（デプロイ後に貼り付け。空欄のままだと注文は送信されません）
   GAS_URL: "https://script.google.com/macros/s/AKfycbxqKozNHchOpsDdxQfzSpkGXcCbiVhPapP05zLj41omgdRF4J-B6IlIIgb8EAHRDF9JVg/exec",
 
-  SHOP_NAME: "LICO PET original",
+  SHOP_NAME: "ITTENMON",
   SHIPPING_FEE: 0,          // 送料（0なら送料無料と表示）
   LINE_URL: "https://line.me/R/ti/p/@wvp9103a",
   LINE_ID: "@wvp9103a",

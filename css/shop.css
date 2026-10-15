@@ -1,4 +1,4 @@
-/* LICO PET original 共通スタイル（白ベース・墨色＋アクセント1色） */
+/* ITTENMON 共通スタイル（白ベース・墨色＋アクセント1色） */
 :root{
   --bg:#ffffff; --bg-sub:#f4f3f0; --panel:#ececea; --text:#222; --sub:#777; --line:#e2e0db;
   --accent:#b8865b; --danger:#b3261e; --img:#e9e7e2; --max:1200px;

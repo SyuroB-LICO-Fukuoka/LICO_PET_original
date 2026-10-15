@@ -1,4 +1,4 @@
-/* LICO PET original 共通処理（ヘッダー・フッター・カート・送信） */
+/* ITTENMON 共通処理（ヘッダー・フッター・カート・送信） */
 (function(){
   const S = window.LICO_SHOP;
   const KEY_CART = "lico-cart-v1", KEY_MODE = "lico-mode";
