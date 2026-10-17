@@ -320,7 +320,7 @@ function renderBoard(){
 function card(o){
   const s=o["状態"], noPhoto = o["写真受領"]!=="はい";
   const pay = o["支払い方法"] || (o["受付"]==="カフェ"?"現金（週1振込）":"カード");
-  const tags = [o["受付"]==="カフェ"?`<span class="tag cafe">${esc(o["カフェ"]||"カフェ")}</span>`:`<span class="tag">ネット</span>`, `<span class="tag">${pay==="カード"?(s==="決済待ち"?"カード払い（まだ払われていない）":"カード払い済み"):"現金（週1振込）"}</span>`, `<span class="tag">${esc(o["受取方法"])}</span>`,
+  const tags = [o["受付"]==="カフェ"?`<span class="tag cafe">${esc(o["カフェ"]||"カフェ")}</span>`:`<span class="tag">ネット</span>`, `<span class="tag">${pay.includes("現金")?"現金（週1振込）":pay.includes("クーポン")?esc(pay):(s==="決済待ち"?"カード払い（まだ払われていない）":"カード払い済み")}</span>`, `<span class="tag">${esc(o["受取方法"])}</span>`,
     s!=="入金待ち"&&s!=="完了"&&noPhoto?`<span class="tag warn">写真なし</span>`:"",
     isLate(o)?`<span class="tag late">納期超過</span>`:isSoon(o)?`<span class="tag warn">納期まで${daysLeft(o)}日</span>`:""].join("");
   let btn = "";

@@ -2,7 +2,7 @@
    ・画面（html/js/css）はネットから最新を取り、つながらないときだけ保存した物を使う
    ・画像は保存した物を先に使う
    ・注文の送信（Googleへの通信）や決済にはさわらない */
-const CACHE = "ittenmon-v1018a";
+const CACHE = "ittenmon-v1018b";
 const CORE = ["./", "index.html", "product.html", "gallery.html", "cart.html", "staff.html", "css/shop.css", "js/config.js", "js/common.js", "js/gallery.js"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
