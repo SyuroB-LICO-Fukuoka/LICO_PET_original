@@ -107,9 +107,11 @@
   }
 
   const goLabel = free => free ? "この内容で注文する（0円）" : (cafe&&f.pay==="cash" ? "この内容で受け付ける" : "お支払いへ進む");
+  // 日本語入力のまま打った全角の英数字・記号（＠ ． ０-９ ー など）を半角にそろえる
+  const half = s => String(s||"").replace(/[\uFF01-\uFF5E]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[ー－―‐−]/g, "-").replace(/[\s\u3000]/g, "");
   function pull(){
     const v = id => { const el=document.getElementById(id); return el ? el.value.trim() : ""; };
-    f.name=v("c-name"); f.kana=v("c-kana"); f.tel=v("c-tel"); f.email=v("c-email"); f.note=document.getElementById("c-note")?.value||"";
+    f.name=v("c-name"); f.kana=v("c-kana"); f.tel=half(v("c-tel")); f.email=half(v("c-email")); f.note=document.getElementById("c-note")?.value||"";
     if(document.getElementById("c-zip")){ f.zip=v("c-zip"); f.address=v("c-addr"); }
     f.agree=!!document.getElementById("c-agree")?.checked;
   }
@@ -133,16 +135,30 @@
     }
   });
 
-  document.addEventListener("submit", async e=>{
-    if(e.target.id!=="frm") return;
-    e.preventDefault(); pull();
+  function problems(){
     const errs = [];
     if(!f.name) errs.push("お名前");
     if(!f.kana) errs.push("フリガナ");
-    if(!/^[0-9０-９\-－ ]{10,14}$/.test(f.tel)) errs.push("電話番号（数字で）");
-    if(!cafe && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) errs.push("メールアドレス");
+    if(!/^[0-9-]{10,14}$/.test(f.tel)) errs.push("電話番号（数字で）");
+    if((!cafe || f.email) && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) errs.push(cafe ? "メールアドレス（正しい形で。なしでも大丈夫です）" : "メールアドレス");
     if(f.delivery==="ship" && (!f.zip || !f.address)) errs.push("郵便番号と住所");
     if(!f.agree) errs.push("同意のチェック");
+    return errs;
+  }
+  // エラーが出ているときは、入力するたびに見直して、直ったものから消す
+  const recheck = e => {
+    if(!e.target.closest || !e.target.closest("#frm") || !$("#msg .alert")) return;
+    pull(); const errs = problems();
+    $("#msg").innerHTML = errs.length ? `<p class="alert">入力してください：${errs.join("、")}</p>` : "";
+  };
+  document.addEventListener("input", recheck); document.addEventListener("change", recheck);
+  // 欄を離れたら全角を半角に直して見せる
+  document.addEventListener("focusout", e => { if(e.target.id==="c-email" || e.target.id==="c-tel") e.target.value = half(e.target.value); });
+
+  document.addEventListener("submit", async e=>{
+    if(e.target.id!=="frm") return;
+    e.preventDefault(); pull();
+    const errs = problems();
     if(errs.length){ $("#msg").innerHTML=`<p class="alert">入力してください：${errs.join("、")}</p>`; return; }
     const go = $("#go"); go.disabled = true; go.textContent = "送信しています…";
     try{
