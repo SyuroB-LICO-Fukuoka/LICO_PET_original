@@ -1,0 +1,16 @@
+{
+  "id": "./staff.html",
+  "name": "ITTENMON 受注管理",
+  "short_name": "受注管理",
+  "description": "ITTENMONの注文を確認するスタッフ用アプリ（LICOは全店、カフェは自店の注文のみ）",
+  "start_url": "./staff.html?source=app",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f8f7",
+  "theme_color": "#1f5a52",
+  "lang": "ja",
+  "icons": [
+    { "src": "img/app/staff-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/app/staff-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

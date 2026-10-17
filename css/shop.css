@@ -176,3 +176,23 @@ footer.site{background:var(--text);color:#ddd;padding:48px 0 24px;font-size:13px
 
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--text);color:#fff;padding:12px 24px;font-size:13px;opacity:0;transition:.3s;z-index:200;pointer-events:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ===== アプリ表示：スマホの下タブ ===== */
+.tabbar{display:none}
+@media(max-width:959px){
+  body.has-tabbar{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+  .tabbar{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 2px 6px;font-size:10.5px;color:var(--sub);position:relative;letter-spacing:.02em}
+  .tabbar svg{width:23px;height:23px}
+  .tabbar a[aria-current="page"]{color:var(--text);font-weight:700}
+  .tabbar .cart-count{top:3px;right:calc(50% - 20px)}
+}
+.install-modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding:16px}
+@media(min-width:600px){.install-modal{align-items:center}}
+.install-box{background:#fff;width:min(420px,100%);padding:24px 22px;display:flex;flex-direction:column;gap:12px;font-size:14px}
+.install-box h3{font-size:17px}
+.install-box ol{padding-left:20px;display:flex;flex-direction:column;gap:6px}
+@media(max-width:959px){
+  body.has-tabbar .cb-btn{bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;padding:11px 15px!important}
+  body.has-tabbar .cb{bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;height:min(560px,calc(100dvh - 150px))!important}
+}

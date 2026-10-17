@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "ITTENMON｜写真でつくるオリジナルグッズ",
+  "short_name": "ITTENMON",
+  "description": "お気に入りの写真で、世界にひとつのスマホケース・キーケース・名刺入れ・インテリアボードをつくれます。",
+  "start_url": "./?source=app",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "lang": "ja",
+  "icons": [
+    { "src": "img/app/shop-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/app/shop-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

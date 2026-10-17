@@ -9,6 +9,12 @@ window.LICO_SHOP = {
   GAS_URL: "https://script.google.com/macros/s/AKfycbxqKozNHchOpsDdxQfzSpkGXcCbiVhPapP05zLj41omgdRF4J-B6IlIIgb8EAHRDF9JVg/exec",
 
   SHOP_NAME: "ITTENMON",
+
+  // カフェの表示名（IDは注文管理スプレッドシートの「カフェ」シートと同じにする）
+  // お客様がカフェのQRコードから開くと、画面上部に「◯◯でのご注文」と出て、そのカフェの注文として記録される
+  CAFES: {
+    terrace: "T'Sテラスカフェ"
+  },
   SHIPPING_FEE: 0,          // 送料（0なら送料無料と表示）
   LINE_URL: "https://line.me/R/ti/p/@wvp9103a",
   LINE_ID: "@wvp9103a",

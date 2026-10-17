@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+Rounded+1c:wght@800&family=Noto+Serif+JP:wght@700&family=Shippori+Mincho:wght@600&family=Klee+One:wght@600&family=Yomogi&family=Kaisei+Decol:wght@700&family=Dancing+Script:wght@600&family=Great+Vibes&family=Pacifico&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/shop.css">
+<link rel="stylesheet" href="css/shop.css?v=1017a">
 <style>
 /* 編集画面：左に道具の切り替え、その隣に道具パネル、中央にケース */
 html,body{height:100%}
@@ -73,6 +73,13 @@ canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 170px);cursor
   canvas#cv{max-height:46vh}
 }
 </style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="img/app/shop-180.png">
+<link rel="icon" href="img/app/shop-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ITTENMON">
 </head>
 <body>
 <div class="ed-top">
@@ -86,6 +93,7 @@ canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 170px);cursor
     <button type="button" data-tool="photo" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>写真</button>
     <button type="button" data-tool="text" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h14M12 6v13M9 19h6"/></svg>テキスト</button>
     <button type="button" data-tool="bg" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l7 7-7 7-7-7z"/><path d="M19 15c0 1.5 1 2.5 1 3.5a1 1 0 0 1-2 0c0-1 1-2 1-3.5z"/></svg>背景色</button>
+    <button type="button" data-tool="deco" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6-4.5-4.2 6.1-.7z"/></svg>スタンプ</button>
     <button type="button" data-tool="layer" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>レイヤー</button>
   </nav>
   <aside class="panel" id="panel"></aside>
@@ -100,9 +108,9 @@ canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 170px);cursor
 </div>
 <div id="modalHost"></div>
 
-<script src="js/config.js?v=1015e"></script>
-<script src="js/models.js?v=1015e"></script>
-<script src="js/common.js?v=1015e"></script>
+<script src="js/config.js?v=1017a"></script>
+<script src="js/models.js?v=1017a"></script>
+<script src="js/common.js?v=1017a"></script>
 <script>
 (() => {
 const {S, yen, esc, getCart, setCart, api, loadImage, toJpeg, toast, isCafe, qs, product, shapeOf, shapePath} = window.LICO;
@@ -125,19 +133,133 @@ const unit = variant ? variant.price : PR.price;
 document.getElementById("modelLabel").textContent = `${PR.short}${optLabel ? "｜" + optLabel : ""}${CC ? "｜ケース：" + CC.label : ""}｜${qty}個`;
 document.getElementById("shapeNote").textContent = PR.kind === "phone" ? "ピンクの線の内側がケースになります。カメラの穴の部分は印刷されません（形は目安です）。"
   : SH.kind === "board" ? "ピンクの線の内側が木のボードです。上の丸い穴の部分は印刷されません。" : "ピンクの線の内側が印刷される面です。";
-if(isCafe()) document.getElementById("cafeBar").innerHTML = `<div class="mode-bar">店頭受付モード（カフェ）</div>`;
+if(isCafe()) document.getElementById("cafeBar").innerHTML = `<div class="mode-bar">${esc(window.LICO.cafeName())}でのご注文</div>`;
 
 /* ===== デザインの状態 ===== */
-let st = { bg: SH.base ? null : "#ffffff", photo: null, texts: [] };   // bg が null＝素材の色のまま（印刷しない）   // photo: {src, fileId, x, y, scale, rot, w, h}
-let sel = "photo";                                     // 選んでいるもの："photo" または テキストの番号
-let img = null, origImg = null, cut = false, cutting = false, uploading = false, photoFileId = "";
+let st = { bg: SH.base ? null : "#ffffff", photos: [], texts: [] };   // bg が null＝素材の色のまま（印刷しない）。photos：重ねる写真（あとのものほど上）{id, x, y, scale, rot, w, h}
+let sel = "photo", selP = null;                        // 選んでいるもの："photo"（selP の写真）または テキストの番号
+const MAX_PHOTOS = 3, MAX_STK = 30;
+const NUM = i => "①②③④⑤⑥⑦⑧⑨⑩"[i] || String(i + 1);   // 写真の番号（保存するファイル名と同じ）
+const media = {};                                      // 写真ごとの画像と送信状態 {img, orig, cut, cutImg, fileId, uploading, err}
+let cutting = false;
+const cur = () => st.photos.find(p => p.id === selP) || null;   // 選んでいる写真
+const curM = () => media[selP] || {};
 const hist = [], future = [];
-const snap = () => JSON.stringify({ bg: st.bg, photo: st.photo && { ...st.photo, src: undefined }, texts: st.texts });
+const snap = () => JSON.stringify({ bg: st.bg, photos: st.photos, texts: st.texts, selP });
 function push(){ hist.push(snap()); if(hist.length > 60) hist.shift(); future.length = 0; syncUndo(); }
-function restore(json){ const s = JSON.parse(json); st.bg = s.bg; st.texts = s.texts; if(s.photo && st.photo) Object.assign(st.photo, s.photo, { src: st.photo.src }); else if(!s.photo) st.photo = null; draw(); renderPanel(); syncUndo(); }
+function restore(json){
+  const s = JSON.parse(json); st.bg = s.bg; st.texts = s.texts; st.photos = (s.photos || []).filter(p => media[p.id]);
+  selP = cur() ? selP : (st.photos.find(p => p.id === s.selP) || st.photos[st.photos.length - 1] || {}).id || null;
+  if(sel === "photo" && !cur()) sel = null;
+  if(typeof sel === "number" && !st.texts[sel]) sel = cur() ? "photo" : null;
+  draw(); renderPanel(); syncUndo();
+}
 function syncUndo(){ document.getElementById("undo").disabled = !hist.length; document.getElementById("redo").disabled = !future.length; }
 document.getElementById("undo").onclick = () => { if(!hist.length) return; future.push(snap()); restore(hist.pop()); };
 document.getElementById("redo").onclick = () => { if(!future.length) return; hist.push(snap()); restore(future.pop()); };
+
+/* ===== 写真の形（中心0,0・幅W・高さHの中に描く） ===== */
+const FRAMES = [
+  { id: "rect", label: "四角" }, { id: "round", label: "角丸" }, { id: "circle", label: "まる" }, { id: "oval", label: "だ円" },
+  { id: "heart", label: "ハート" }, { id: "star", label: "星" }, { id: "flower", label: "お花" }, { id: "cloud", label: "くも" },
+  { id: "cat", label: "ねこ" }, { id: "bear", label: "くま" }, { id: "rabbit", label: "うさぎ" }
+];
+// 写真の色味（プリクラ風フィルター）
+const FILTERS = {
+  none: { label: "そのまま", css: "none" },
+  soft: { label: "ふんわり", css: "brightness(1.08) contrast(0.9) saturate(1.1)" },
+  bright: { label: "美白", css: "brightness(1.18) contrast(0.92) saturate(0.95)" },
+  vivid: { label: "あざやか", css: "saturate(1.45) contrast(1.08)" },
+  pastel: { label: "パステル", css: "brightness(1.12) saturate(0.7) contrast(0.88)" },
+  pink: { label: "ゆめかわ", css: "sepia(0.25) hue-rotate(300deg) saturate(1.35) brightness(1.06)" },
+  sepia: { label: "セピア", css: "sepia(0.85)" },
+  mono: { label: "モノクロ", css: "grayscale(1) contrast(1.05)" }
+};
+// 切り抜いた写真の形のシルエット（白フチ用）
+const silCache = new Map();
+function silhouette(img, W, H, color, bw){
+  const key = [img.src.slice(-40), Math.round(W), Math.round(H), color, Math.round(bw)].join("|");
+  if(silCache.has(key)) return silCache.get(key);
+  const o = document.createElement("canvas"); o.width = Math.ceil(W + bw * 2); o.height = Math.ceil(H + bw * 2);
+  const x = o.getContext("2d"); x.drawImage(img, bw, bw, W, H); x.globalCompositeOperation = "source-in"; x.fillStyle = color; x.fillRect(0, 0, o.width, o.height);
+  if(silCache.size > 30) silCache.clear(); silCache.set(key, o); return o;
+}
+// スタンプ（色を変えられるものは白いふち付き。絵文字はスマホの絵文字で表示）
+const STICKERS = [
+  { id: "heart", c: "#ff6fa5", svg: '<path d="M50 88C12 62 4 40 15 24 27 9 44 13 50 29 56 13 73 9 85 24 96 40 88 62 50 88z"/>' },
+  { id: "star", c: "#ffd23f", svg: '<path d="M50 6l12.6 26.8 29.4 3.8-21.6 20.2 5.6 29.2L50 71.6 24 86l5.6-29.2L8 36.6l29.4-3.8z"/>' },
+  { id: "kira", c: "#ffe066", svg: '<path d="M50 4C54 36 64 46 96 50 64 54 54 64 50 96 46 64 36 54 4 50 36 46 46 36 50 4z"/>' },
+  { id: "kira2", c: "#b8e1ff", svg: '<path d="M38 10C41 32 48 39 70 42 48 45 41 52 38 74 35 52 28 45 6 42 28 39 35 32 38 10zM76 54C78 66 82 70 94 72 82 74 78 78 76 90 74 78 70 74 58 72 70 70 74 66 76 54z"/>' },
+  { id: "ribbon", c: "#ff8fb8", svg: '<path d="M50 44C40 26 14 16 10 30 6 42 12 58 30 56 38 55 46 50 50 48 54 50 62 55 70 56 88 58 94 42 90 30 86 16 60 26 50 44zM46 50 34 88 44 84 50 92 50 54zM54 50 66 88 56 84 50 92 50 54z"/><circle cx="50" cy="47" r="8"/>' },
+  { id: "crown", c: "#f7c948", svg: '<path d="M12 74 6 28 32 48 50 16 68 48 94 28 88 74z"/><rect x="12" y="76" width="76" height="12" rx="3"/>' },
+  { id: "paw", c: "#a0703c", svg: '<ellipse cx="50" cy="66" rx="20" ry="17"/><ellipse cx="24" cy="44" rx="9" ry="11"/><ellipse cx="40" cy="28" rx="9" ry="11"/><ellipse cx="60" cy="28" rx="9" ry="11"/><ellipse cx="76" cy="44" rx="9" ry="11"/>' },
+  { id: "flower", c: "#ffadc9", svg: '<g transform="translate(50 50)"><circle cx="0" cy="-24" r="17"/><circle cx="23" cy="-7" r="17"/><circle cx="14" cy="20" r="17"/><circle cx="-14" cy="20" r="17"/><circle cx="-23" cy="-7" r="17"/><circle r="12" fill="#ffe066"/></g>' },
+  { id: "bubble", c: "#ffffff", svg: '<path d="M14 18h72a8 8 0 0 1 8 8v36a8 8 0 0 1-8 8H44L26 88l4-18H14a8 8 0 0 1-8-8V26a8 8 0 0 1 8-8z"/>' },
+  { id: "moon", c: "#ffe28a", svg: '<path d="M62 8A42 42 0 1 0 92 70 34 34 0 1 1 62 8z"/>' },
+  { id: "drop", c: "#7fd1ff", svg: '<path d="M50 6C34 32 22 46 22 62a28 28 0 0 0 56 0C78 46 66 32 50 6z"/>' },
+  { id: "note", c: "#9b7bff", svg: '<path d="M38 18 84 8v56a12 10 0 1 1-8-9.5V26L46 32v40a12 10 0 1 1-8-9.5z"/>' },
+  { id: "e1", emoji: "💖" }, { id: "e2", emoji: "✨" }, { id: "e3", emoji: "🎀" }, { id: "e4", emoji: "👑" }, { id: "e5", emoji: "🌸" }, { id: "e6", emoji: "🍓" },
+  { id: "e7", emoji: "🦋" }, { id: "e8", emoji: "🐾" }, { id: "e9", emoji: "🌈" }, { id: "e10", emoji: "🧸" }, { id: "e11", emoji: "💕" }, { id: "e12", emoji: "⭐" },
+  { id: "e13", emoji: "😻" }, { id: "e14", emoji: "🐶" }, { id: "e15", emoji: "🐱" }, { id: "e16", emoji: "🍰" }, { id: "e17", emoji: "🫧" }, { id: "e18", emoji: "💐" }
+];
+const STK_COLORS = ["#ff6fa5", "#ffadc9", "#ff3b6b", "#ffd23f", "#ffe066", "#7fd1ff", "#9b7bff", "#8fd1c7", "#a0703c", "#ffffff", "#1b1b1b", "#c9a24a"];
+const stkCache = new Map();
+function stickerSvg(id, color){ const d = STICKERS.find(x => x.id === id); return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 116 116"><g fill="${color}" stroke="#fff" stroke-width="7" stroke-linejoin="round" paint-order="stroke">${d.svg}</g></svg>`; }
+function stickerImg(id, color){
+  const key = id + color; if(stkCache.has(key)) return stkCache.get(key);
+  const im = new Image(); im.onload = () => draw(); im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(stickerSvg(id, color));
+  stkCache.set(key, im); return im;
+}
+function frameShape(c, k, W, H){
+  const m = Math.min(W, H); c.beginPath();
+  if(k === "round"){ c.roundRect(-W / 2, -H / 2, W, H, m * .14); }
+  else if(k === "circle"){ c.arc(0, 0, m / 2, 0, Math.PI * 2); }
+  else if(k === "oval"){ c.ellipse(0, 0, W / 2, H / 2, 0, 0, Math.PI * 2); }
+  else if(k === "heart"){
+    const s = m / 2;
+    c.moveTo(0, s * .95);
+    c.bezierCurveTo(-s * 1.25, s * .1, -s * 1.05, -s * 1.05, 0, -s * .45);
+    c.bezierCurveTo(s * 1.05, -s * 1.05, s * 1.25, s * .1, 0, s * .95); c.closePath();
+  }
+  else if(k === "star"){
+    const R = m / 2, r = R * .5;
+    for(let i = 0; i < 10; i++){ const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r : R; i ? c.lineTo(Math.cos(a) * q, Math.sin(a) * q * 1.02 + R * .06) : c.moveTo(Math.cos(a) * q, Math.sin(a) * q * 1.02 + R * .06); }
+    c.closePath();
+  }
+  else if(k === "flower") scallop(c, 8, .32, m / 2, m / 2);    // 花びら8枚
+  else if(k === "cloud") scallop(c, 9, .3, W / 2, H / 2);       // もこもこの雲（写真の縦横に合わせる）
+  else if(k === "cat"){   // ねこの顔（耳は三角）
+    c.ellipse(0, m * .08, m * .46, m * .4, 0, 0, Math.PI * 2);
+    c.moveTo(-m * .44, -m * .02); c.lineTo(-m * .36, -m * .48); c.lineTo(-m * .06, -m * .3); c.closePath();
+    c.moveTo(m * .06, -m * .3); c.lineTo(m * .36, -m * .48); c.lineTo(m * .44, -m * .02); c.closePath();
+  }
+  else if(k === "bear"){   // くまの顔（耳はまる）
+    c.moveTo(m * .42, m * .1); c.arc(0, m * .1, m * .4, 0, Math.PI * 2);
+    c.moveTo(-m * .14, -m * .3); c.arc(-m * .31, -m * .3, m * .17, 0, Math.PI * 2);
+    c.moveTo(m * .48, -m * .3); c.arc(m * .31, -m * .3, m * .17, 0, Math.PI * 2);
+  }
+  else if(k === "rabbit"){   // うさぎの顔（長い耳）
+    c.ellipse(0, m * .22, m * .4, m * .3, 0, 0, Math.PI * 2);
+    c.moveTo(-m * .08, -m * .2); c.ellipse(-m * .17, -m * .2, m * .1, m * .3, -.18, 0, Math.PI * 2);
+    c.moveTo(m * .26, -m * .2); c.ellipse(m * .17, -m * .2, m * .1, m * .3, .18, 0, Math.PI * 2);
+  }
+  else c.rect(-W / 2, -H / 2, W, H);
+}
+
+// 丸いでこぼこが並んだ外周を1本の線で描く（ふちどりに内側の線が出ないように）
+function scallop(c, n, r0, sx, sy){
+  const cr = 1 - r0, h = Math.PI / n;
+  const rho = cr * Math.cos(h) + Math.sqrt(Math.max(0, r0 * r0 - cr * cr * Math.sin(h) * Math.sin(h)));   // となりの丸との交点
+  const phi = Math.atan2(rho * Math.sin(h), rho * Math.cos(h) - cr);
+  for(let i = 0; i < n; i++){
+    const a = i * 2 * h - Math.PI / 2, cx = Math.cos(a) * cr, cy = Math.sin(a) * cr;
+    for(let j = 0; j <= 10; j++){
+      const t = a - phi + 2 * phi * j / 10, x = (cx + Math.cos(t) * r0) * sx, y = (cy + Math.sin(t) * r0) * sy;
+      (i === 0 && j === 0) ? c.moveTo(x, y) : c.lineTo(x, y);
+    }
+  }
+  c.closePath();
+}
 
 /* ===== 描画 ===== */
 function caseClip(c, s){ shapePath(c, SH, s); }
@@ -149,12 +271,37 @@ function paint(c, s, forPrint){
     const g = 24 * s; for(let y = 0; y * g < PH * s; y++) for(let x = 0; x * g < PW * s; x++){ c.fillStyle = (x + y) % 2 ? "#e9edf0" : "#f8fafb"; c.fillRect(x * g, y * g, g, g); }
   }
   else if(!forPrint && SH.base){ c.fillStyle = SH.base; c.fillRect(0, 0, PW * s, PH * s); }
-  if(st.photo && img){
-    const p = st.photo;
-    c.save(); c.translate(p.x * s, p.y * s); c.rotate(p.rot * Math.PI / 180); c.scale(p.scale * s, p.scale * s);
-    c.drawImage(img, -p.w / 2, -p.h / 2, p.w, p.h); c.restore();
-  }
+  st.photos.forEach(p => {   // 写真を下から順に重ねる（形で切り抜き、ふちどりを付ける）
+    const m = media[p.id]; if(!m || !m.img) return;
+    const W = p.w * p.scale * s, H = p.h * p.scale * s, k = p.shape || "rect", b = p.border, bw = b && b.w ? b.w * s : 0, solid = bw && (b.style || "solid") === "solid";
+    c.save(); c.translate(p.x * s, p.y * s); c.rotate(p.rot * Math.PI / 180);
+    const sticker = bw && m.cut && k === "rect";   // 切り抜いた写真：形にそって白フチ（プリクラ風）
+    if(sticker){ const sil = silhouette(m.img, W, H, b.color, bw); for(let i = 0; i < 16; i++){ const a = i * Math.PI / 8; c.drawImage(sil, -W / 2 - bw + Math.cos(a) * bw, -H / 2 - bw + Math.sin(a) * bw); } c.drawImage(sil, -W / 2 - bw, -H / 2 - bw); }
+    else if(solid){ frameShape(c, k, W, H); c.fillStyle = b.color; c.fill(); c.lineWidth = bw * 2; c.strokeStyle = b.color; c.lineJoin = "round"; c.stroke(); }   // 外側にだけ見えるふちどり
+    if(k !== "rect"){ frameShape(c, k, W, H); c.save(); c.clip(); }
+    if(p.filter && FILTERS[p.filter]) c.filter = FILTERS[p.filter].css;
+    c.drawImage(m.img, -W / 2, -H / 2, W, H);
+    c.filter = "none";
+    if(k !== "rect") c.restore();
+    if(bw && !solid && !sticker){
+      const lw = b.w * s; c.strokeStyle = b.color; c.lineJoin = "round"; c.lineCap = "round";
+      c.lineJoin = "round";
+      if(b.style === "dot"){ c.setLineDash([lw * .01, lw * 1.9]); }
+      else if(b.style === "dash"){ c.setLineDash([lw * 2.4, lw * 1.4]); }
+      frameShape(c, k, W, H);
+      if(b.style === "double"){ c.lineWidth = lw * .35; c.stroke(); frameShape(c, k, W - lw * 2.2, H - lw * 2.2); c.stroke(); }
+      else { c.lineWidth = lw; c.stroke(); }
+    }
+    c.restore();
+  });
   st.texts.forEach(t => {
+    if(t.stk){   // スタンプ
+      c.save(); c.translate(t.x * s, t.y * s); c.rotate((t.rot || 0) * Math.PI / 180);
+      const d = STICKERS.find(x => x.id === t.stk) || {};
+      if(d.emoji){ c.font = `${t.size * s}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(d.emoji, 0, t.size * s * .06); }
+      else { const im = stickerImg(t.stk, t.color); if(im.complete && im.naturalWidth) c.drawImage(im, -t.size * s / 2, -t.size * s / 2, t.size * s, t.size * s); }
+      c.restore(); return;
+    }
     const f = P.fonts.find(x => x.id === t.font) || P.fonts[0];
     c.save(); c.translate(t.x * s, t.y * s); c.rotate((t.rot || 0) * Math.PI / 180);
     c.font = `${f.weight || 400} ${t.size * s}px ${f.family}`; c.fillStyle = t.color; c.textAlign = "center"; c.textBaseline = "middle";
@@ -171,8 +318,9 @@ function paint(c, s, forPrint){
   }
 }
 function bounds(which){
-  if(which === "photo" && st.photo && img){ const p = st.photo; return { x: p.x, y: p.y, w: p.w * p.scale, h: p.h * p.scale, rot: p.rot }; }
+  if(which === "photo"){ const p = cur(); return p ? { x: p.x, y: p.y, w: p.w * p.scale, h: p.h * p.scale, rot: p.rot } : null; }
   const t = st.texts[which];
+  if(typeof which === "number" && t && t.stk) return { x: t.x, y: t.y, w: t.size * 1.05, h: t.size * 1.05, rot: t.rot || 0 };
   if(typeof which === "number" && t){
     const f = P.fonts.find(x => x.id === t.font) || P.fonts[0];
     ctx.save(); ctx.font = `${f.weight || 400} ${t.size}px ${f.family}`; const w = ctx.measureText(t.text).width; ctx.restore();
@@ -182,7 +330,7 @@ function bounds(which){
 }
 function draw(){
   ctx.clearRect(0, 0, cv.width, cv.height);
-  if(!st.photo){ // 写真がないときの案内
+  if(!st.photos.length){ // 写真がないときの案内
     paint(ctx, VIEW, false);
     ctx.save(); ctx.fillStyle = SH.base && !st.bg && /^#[0-4]/.test(SH.base) ? "#dddddd" : "#8d887e"; ctx.font = "15px 'Noto Sans JP'"; ctx.textAlign = "center";
     ctx.fillText("左の「写真をえらぶ」から", cv.width / 2, cv.height / 2 - 10); ctx.fillText("写真を入れてください", cv.width / 2, cv.height / 2 + 14); ctx.restore();
@@ -196,18 +344,25 @@ const pts = new Map(); let drag = null;
 function toDesign(e){ const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * PW / r.width, y: (e.clientY - r.top) * PH / r.height }; }
 function hit(pt){
   for(let i = st.texts.length - 1; i >= 0; i--){ const b = bounds(i); if(Math.abs(pt.x - b.x) < b.w / 2 && Math.abs(pt.y - b.y) < b.h / 2) return i; }
-  return st.photo ? "photo" : null;
+  // 上に重なっている写真から順に、さわった場所にあるものを選ぶ（回転も考える）
+  for(let i = st.photos.length - 1; i >= 0; i--){
+    const p = st.photos[i], a = -p.rot * Math.PI / 180, dx = pt.x - p.x, dy = pt.y - p.y;
+    const lx = dx * Math.cos(a) - dy * Math.sin(a), ly = dx * Math.sin(a) + dy * Math.cos(a);
+    if(Math.abs(lx) < p.w * p.scale / 2 && Math.abs(ly) < p.h * p.scale / 2) return "p:" + p.id;
+  }
+  return cur() ? "photo" : null;
 }
 cv.addEventListener("pointerdown", e => {
   cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, toDesign(e));
   if(pts.size === 1){
-    const pt = toDesign(e), h = hit(pt); if(h === null) return;
-    if(h !== sel){ sel = h; renderPanel(); }
-    const o = h === "photo" ? st.photo : st.texts[h];
+    const pt = toDesign(e); let h = hit(pt); if(h === null) return;
+    if(typeof h === "string" && h.startsWith("p:")){ const id = h.slice(2); h = "photo"; if(id !== selP || sel !== "photo"){ selP = id; sel = "photo"; if(tool !== "photo"){ tool = "photo"; document.querySelectorAll(".rail button").forEach(x => x.setAttribute("aria-pressed", x.dataset.tool === "photo")); } renderPanel(); } }
+    else if(h !== sel){ sel = h; const want = st.texts[h] && st.texts[h].stk ? "deco" : "text"; if(tool !== want){ tool = want; document.querySelectorAll(".rail button").forEach(x => x.setAttribute("aria-pressed", x.dataset.tool === want)); } renderPanel(); }
+    const o = h === "photo" ? cur() : st.texts[h];
     drag = { start: pt, ox: o.x, oy: o.y, moved: false };
-  } else if(pts.size === 2 && sel === "photo" && st.photo){
+  } else if(pts.size === 2 && sel === "photo" && cur()){
     const [a, b] = [...pts.values()];
-    drag = { pinch: Math.hypot(a.x - b.x, a.y - b.y), scale: st.photo.scale, ang: Math.atan2(b.y - a.y, b.x - a.x), rot: st.photo.rot, moved: false };
+    drag = { pinch: Math.hypot(a.x - b.x, a.y - b.y), scale: cur().scale, ang: Math.atan2(b.y - a.y, b.x - a.x), rot: cur().rot, moved: false };
   }
   draw();
 });
@@ -217,52 +372,68 @@ cv.addEventListener("pointermove", e => {
   if(!drag.moved){ push(); drag.moved = true; }
   if(drag.pinch && pts.size === 2){
     const [a, b] = [...pts.values()];
-    st.photo.scale = Math.max(.05, drag.scale * Math.hypot(a.x - b.x, a.y - b.y) / drag.pinch);
-    st.photo.rot = drag.rot + (Math.atan2(b.y - a.y, b.x - a.x) - drag.ang) * 180 / Math.PI;
+    cur().scale = Math.max(.05, drag.scale * Math.hypot(a.x - b.x, a.y - b.y) / drag.pinch);
+    cur().rot = drag.rot + (Math.atan2(b.y - a.y, b.x - a.x) - drag.ang) * 180 / Math.PI;
   } else if(!drag.pinch){
-    const pt = toDesign(e), o = sel === "photo" ? st.photo : st.texts[sel];
+    const pt = toDesign(e), o = sel === "photo" ? cur() : st.texts[sel];
     o.x = drag.ox + pt.x - drag.start.x; o.y = drag.oy + pt.y - drag.start.y;
   }
   draw(); syncSliders();
 });
 const up = e => { pts.delete(e.pointerId); if(pts.size === 0) drag = null; };
 cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
-cv.addEventListener("wheel", e => { if(sel !== "photo" || !st.photo) return; e.preventDefault(); push(); st.photo.scale = Math.max(.05, st.photo.scale * (e.deltaY < 0 ? 1.05 : .95)); draw(); syncSliders(); }, { passive: false });
+cv.addEventListener("wheel", e => { if(sel !== "photo" || !cur()) return; e.preventDefault(); push(); cur().scale = Math.max(.05, cur().scale * (e.deltaY < 0 ? 1.05 : .95)); draw(); syncSliders(); }, { passive: false });
 
-/* ===== 写真 ===== */
-function fitCover(){ const p = st.photo; p.scale = Math.max(PW / p.w, PH / p.h); p.x = PW / 2; p.y = PH / 2; p.rot = 0; }
+/* ===== 写真（何枚でも重ねられる。あとから入れた写真ほど上） ===== */
+function fitCover(p){ p = p || cur(); p.scale = Math.max(PW / p.w, PH / p.h); p.x = PW / 2; p.y = PH / 2; p.rot = 0; }
+// 形ボタンの小さな絵（SVG）
+function frameIcon(k){
+  const cv2 = { rect: '<rect x="-9" y="-9" width="18" height="18"/>', round: '<rect x="-9" y="-9" width="18" height="18" rx="5"/>', circle: '<circle r="9"/>', oval: '<ellipse rx="10" ry="7"/>',
+    heart: '<path d="M0 9C-11 1-10-10 0-4C10-10 11 1 0 9z"/>', star: '<path d="M0-10L2.9-3.1 9.5-3.1 4.3 1.2 6.2 8.1 0 4 -6.2 8.1 -4.3 1.2 -9.5-3.1 -2.9-3.1z"/>',
+    flower: '<path d="M0-10a3.6 3.6 0 0 1 5 5 3.6 3.6 0 0 1 5 5 3.6 3.6 0 0 1-5 5 3.6 3.6 0 0 1-5 5 3.6 3.6 0 0 1-5-5 3.6 3.6 0 0 1-5-5 3.6 3.6 0 0 1 5-5 3.6 3.6 0 0 1 5-5z"/>',
+    cloud: '<path d="M-7 6a5 5 0 0 1-1-9 6 6 0 0 1 11-2 5 5 0 0 1 5 6 4 4 0 0 1-3 5z"/>',
+    cat: '<path d="M-9 0-8-10-2-6h4l6-4 1 10a9 8 0 0 1-18 0z"/>', bear: '<circle cx="-6" cy="-6" r="4"/><circle cx="6" cy="-6" r="4"/><circle cy="2" r="8"/>',
+    rabbit: '<ellipse cx="-4" cy="-6" rx="2.5" ry="7"/><ellipse cx="4" cy="-6" rx="2.5" ry="7"/><ellipse cy="4" rx="8" ry="6"/>' };
+  return `<g fill="#cfc8bd" stroke="#555" stroke-width="1.2">${cv2[k] || cv2.rect}</g>`;
+}
+const anyUploading = () => st.photos.some(p => media[p.id] && media[p.id].uploading);
 async function onPhoto(file){
   if(!file) return;
-  uploading = true; setState("写真を準備しています…");
+  if(st.photos.length >= MAX_PHOTOS){ toast("写真は" + MAX_PHOTOS + "枚までです"); return; }
+  const id = "p" + Date.now().toString(36), m = media[id] = { uploading: true, fileId: "", err: "" };
+  setState("写真を準備しています…");
   try{
     const im = await loadImage(file);
     const big = toJpeg(im, 2400, .92);
-    img = new Image(); img.src = big; await img.decode(); origImg = img; cut = false; cutImg = null;
+    const img = new Image(); img.src = big; await img.decode();
+    Object.assign(m, { img, orig: img, cut: false, cutImg: null });
     push();
-    st.photo = { w: img.naturalWidth, h: img.naturalHeight, x: PW / 2, y: PH / 2, scale: 1, rot: 0 };
-    fitCover(); sel = "photo"; draw(); renderPanel();
+    const p = { id, w: img.naturalWidth, h: img.naturalHeight, x: PW / 2, y: PH / 2, scale: 1, rot: 0 };
+    if(!st.photos.length) fitCover(p);                               // 1枚目は全体に合わせる
+    else p.scale = Math.min(PW * .6 / p.w, PH * .6 / p.h);           // 2枚目からは小さめに中央へ
+    st.photos.push(p); selP = id; sel = "photo"; draw(); renderPanel();
     setState("写真を送っています…");
     const r = await api({ action: "uploadPhoto", name: file.name, data: big.split(",")[1] });
-    photoFileId = r.fileId; setState("写真を受け付けました");
-  }catch(err){ photoFileId = ""; setState(err.message, true); }
-  uploading = false;
+    m.fileId = r.fileId; m.uploading = false; if(selP === id) setState("写真を受け付けました");
+  }catch(err){ console.error(err); m.uploading = false; m.err = err.message; if(selP === id) setState(err.message, true); else toast(err.message); }
+  renderPanel();
 }
 function setState(t, bad){ const el = document.getElementById("photoState"); if(el){ el.textContent = t; el.style.color = bad ? "var(--danger)" : ""; } }
+function photoStateText(){ const m = curM(); return m.uploading ? "写真を送っています…" : m.err ? m.err : m.fileId ? "写真を受け付けました" : ""; }
 
 /* ===== 背景透過（ブラウザの中だけで処理。写真はほかの会社に送られない） ===== */
-let cutImg = null;
 async function removeBg(){
-  if(cutting || !origImg) return;
-  if(cutImg && cutImg.dataset.from === origImg.src.slice(-64)){ img = cutImg; cut = true; draw(); renderPanel(); return; }
+  const m = curM(); if(cutting || !m.orig) return;
+  if(m.cutImg){ m.img = m.cutImg; m.cut = true; draw(); renderPanel(); return; }
   cutting = true; renderPanel();
   try{
     const { removeBackground } = await import("https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm");
-    const blob = await removeBackground(origImg.src, {
+    const blob = await removeBackground(m.orig.src, {
       model: "isnet_quint8", output: { format: "image/png" },
-      progress: (key, cur, total) => { const el = document.getElementById("cutState"); if(el && total) el.textContent = "準備しています… " + Math.round(cur / total * 100) + "%"; }
+      progress: (key, now, total) => { const el = document.getElementById("cutState"); if(el && total) el.textContent = "準備しています… " + Math.round(now / total * 100) + "%"; }
     });
-    const ci = new Image(); ci.src = URL.createObjectURL(blob); await ci.decode(); ci.dataset.from = origImg.src.slice(-64);
-    cutImg = ci; img = ci; cut = true;
+    const ci = new Image(); ci.src = URL.createObjectURL(blob); await ci.decode();
+    m.cutImg = ci; m.img = ci; m.cut = true;
     if(st.bg === "#ffffff") toast("背景を消しました。「背景色」から色を選べます");
   }catch(err){
     toast("背景を消せませんでした。別の写真か、時間をおいてお試しください");
@@ -292,33 +463,58 @@ const colorName = h => (P.colors.find(c => c.hex === h) || {}).label || "カラ�
 
 function renderPanel(){
   if(tool === "photo"){
-    const has = !!st.photo;
+    const p = sel === "photo" ? cur() : null, m = curM(), idx = p ? st.photos.indexOf(p) : -1;
     panel.innerHTML = `<h2>写真・データ</h2>
-      <label class="tile"><input type="file" id="file" accept="image/*"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>${has ? "写真を入れかえる" : "写真をえらぶ"}</label>
-      <p class="state" id="photoState">${photoFileId ? "写真を受け付けました" : ""}</p>
-      <p class="help">写真はこの画面で送信します（あとから送ることはできません）。明るく、ピントの合った写真がきれいに仕上がります。</p>
-      ${has ? `<div class="row"><label for="sc">大きさ</label><input type="range" id="sc" min="5" max="400" value="${Math.round(st.photo.scale * 100)}"></div>
-      <div class="row"><label for="rt">回転</label><input type="range" id="rt" min="-180" max="180" value="${Math.round(st.photo.rot)}"></div>
+      ${st.photos.length >= MAX_PHOTOS ? `<p class="help" style="border:1px dashed var(--line);padding:14px;text-align:center">写真は${MAX_PHOTOS}枚まで入っています。入れ替えるときは、写真を選んで「この写真を消す」を押してください。</p>` : ""}
+      <label class="tile" ${st.photos.length >= MAX_PHOTOS ? "hidden" : ""}><input type="file" id="file" accept="image/*"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>${st.photos.length ? "写真を追加する（重ねる）" : "写真をえらぶ"}</label>
+      <p class="help">写真は${MAX_PHOTOS}枚まで入れられます（いま${st.photos.length}枚）。入れた順に 写真①・②・③ になり、あとから入れた写真ほど上に重なります。</p>
+      ${st.photos.length > 1 ? `<div class="layers">${st.photos.map((x, i) => `<button type="button" data-ph="${x.id}" aria-pressed="${p && x.id === p.id}">写真${NUM(i)}${i === st.photos.length - 1 ? "（いちばん上）" : i === 0 ? "（いちばん下）" : ""}<span>›</span></button>`).reverse().join("")}</div>` : ""}
+      ${p ? `<p class="state" id="photoState">${esc(photoStateText())}</p>
+      <h2 style="font-size:13px">選んでいる写真：写真${idx + 1}</h2>
+      <div class="row"><label for="sc">大きさ</label><input type="range" id="sc" min="5" max="400" value="${Math.round(p.scale * 100)}"></div>
+      <div class="row"><label for="rt">回転</label><input type="range" id="rt" min="-180" max="180" value="${Math.round(p.rot)}"></div>
       <div class="btns"><button type="button" id="fit">全体に合わせる</button><button type="button" id="ctr">中央にそろえる</button><button type="button" id="r90">90°回す</button></div>
+      <div class="row"><label>写真の形</label><div class="btns" id="frames">${FRAMES.map(f => `<button type="button" data-fr="${f.id}" style="${(p.shape || "rect") === f.id ? "border-color:var(--text);background:#f7f6f3" : ""}"><svg viewBox="-12 -12 24 24" width="18" height="18" style="vertical-align:-4px;margin-right:4px">${frameIcon(f.id)}</svg>${f.label}</button>`).join("")}</div></div>
+      <div class="row"><label>色味（フィルター）</label><div class="btns" id="flt">${Object.entries(FILTERS).map(([id, f]) => `<button type="button" data-flt="${id}" style="${(p.filter || "none") === id ? "border-color:var(--text);background:#f7f6f3" : ""}">${f.label}</button>`).join("")}</div></div>
+      <div class="row"><label>ふちどり${m.cut && (p.shape || "rect") === "rect" ? "（切り抜いた形にそって付きます）" : ""}</label>
+        <div class="btns" id="bw">${[["なし", 0], ["細い", 10], ["ふつう", 22], ["太い", 40]].map(([l, w]) => `<button type="button" data-bw="${w}" style="${((p.border || {}).w || 0) === w ? "border-color:var(--text);background:#f7f6f3" : ""}">${l}</button>`).join("")}</div>
+        ${(p.border || {}).w ? `<div class="btns" id="bs">${[["solid", "線"], ["double", "二重線"], ["dash", "点線"], ["dot", "水玉"]].map(([v, l]) => `<button type="button" data-bs="${v}" style="${(p.border.style || "solid") === v ? "border-color:var(--text);background:#f7f6f3" : ""}">${l}</button>`).join("")}</div>
+        <div class="swatch" id="bc">${["#ffffff", "#1b1b1b", "#c9a24a", "#f4b6c2", "#e58fa8", "#d7263d", "#f4c430", "#8fd1c7", "#5bb8e6", "#8a5cc2", "#7a5c43"].map(h => `<button type="button" data-bc="${h}" aria-pressed="${p.border.color === h}" style="background:${h}" aria-label="ふちどりの色 ${h}"></button>`).join("")}</div>
+        <input type="color" id="bcFree" class="free" value="${p.border.color}" aria-label="ふちどりの色を自由に選ぶ">` : ""}</div>
+      ${st.photos.length > 1 ? `<div class="btns"><button type="button" id="up" ${idx === st.photos.length - 1 ? "disabled" : ""}>ひとつ上へ</button><button type="button" id="down" ${idx === 0 ? "disabled" : ""}>ひとつ下へ</button></div>` : ""}
       <div class="row"><label>背景透過</label>
-        <div class="btns">${cut ? `<button type="button" id="uncut">背景を元に戻す</button>` : `<button type="button" id="cut" ${cutting ? "disabled" : ""}>${cutting ? "背景を消しています…" : "背景を消す（透過）"}</button>`}</div>
-        <p class="help" id="cutState">${cut ? "背景を消しました。左の「背景色」から好きな色を選べます。" : "ペットや人だけを切り抜きます。はじめて使うときは準備に30秒〜1分ほどかかります。"}</p></div>
-      <p class="help">写真は指やマウスで動かせます。スマホは2本指で拡大・回転できます。</p>` : ""}`;
-    panel.querySelector("#file").onchange = e => onPhoto(e.target.files[0]);
-    if(has){
+        <div class="btns">${m.cut ? `<button type="button" id="uncut">背景を元に戻す</button>` : `<button type="button" id="cut" ${cutting ? "disabled" : ""}>${cutting ? "背景を消しています…" : "背景を消す（透過）"}</button>`}</div>
+        <p class="help" id="cutState">${m.cut ? "背景を消しました。下の写真や背景色が見えるようになります。" : "ペットや人だけを切り抜きます。重ねるときは、上の写真の背景を消すときれいに重なります。はじめて使うときは準備に30秒〜1分ほどかかります。"}</p></div>
+      <div class="btns"><button type="button" id="pdel" class="danger">この写真を消す</button></div>
+      <p class="help">写真は指やマウスで動かせます。スマホは2本指で拡大・回転できます。重なっている写真は、画面で押すか、上の一覧から選べます。</p>`
+      : `<p class="help">写真はこの画面で送信します（あとから送ることはできません）。明るく、ピントの合った写真がきれいに仕上がります。</p>`}`;
+    panel.querySelector("#file").onchange = e => { onPhoto(e.target.files[0]); e.target.value = ""; };
+    panel.querySelectorAll("[data-ph]").forEach(b => b.onclick = () => { selP = b.dataset.ph; sel = "photo"; draw(); renderPanel(); });
+    if(p){
       const sc = panel.querySelector("#sc"), rt = panel.querySelector("#rt");
       sc.onpointerdown = rt.onpointerdown = () => push();
-      sc.oninput = () => { st.photo.scale = sc.value / 100; draw(); };
-      rt.oninput = () => { st.photo.rot = +rt.value; draw(); };
-      panel.querySelector("#fit").onclick = () => { push(); fitCover(); draw(); syncSliders(); };
-      panel.querySelector("#ctr").onclick = () => { push(); st.photo.x = PW / 2; st.photo.y = PH / 2; draw(); };
-      panel.querySelector("#r90").onclick = () => { push(); st.photo.rot = ((st.photo.rot + 90 + 180) % 360) - 180; draw(); syncSliders(); };
+      sc.oninput = () => { p.scale = sc.value / 100; draw(); };
+      rt.oninput = () => { p.rot = +rt.value; draw(); };
+      panel.querySelector("#fit").onclick = () => { push(); fitCover(p); draw(); syncSliders(); };
+      panel.querySelector("#ctr").onclick = () => { push(); p.x = PW / 2; p.y = PH / 2; draw(); };
+      panel.querySelector("#r90").onclick = () => { push(); p.rot = ((p.rot + 90 + 180) % 360) - 180; draw(); syncSliders(); };
+      const mv = d => { push(); const i = st.photos.indexOf(p); st.photos.splice(i, 1); st.photos.splice(i + d, 0, p); draw(); renderPanel(); };
+      const ub2 = panel.querySelector("#up"), db = panel.querySelector("#down");
+      if(ub2) ub2.onclick = () => mv(1);
+      if(db) db.onclick = () => mv(-1);
+      panel.querySelectorAll("[data-fr]").forEach(b => b.onclick = () => { push(); p.shape = b.dataset.fr; draw(); renderPanel(); });
+      panel.querySelectorAll("[data-flt]").forEach(b => b.onclick = () => { push(); p.filter = b.dataset.flt; draw(); renderPanel(); });
+      panel.querySelectorAll("[data-bw]").forEach(b => b.onclick = () => { push(); const w = +b.dataset.bw; p.border = w ? Object.assign({ color: "#ffffff", style: "solid" }, p.border || {}, { w }) : null; draw(); renderPanel(); });
+      panel.querySelectorAll("[data-bs]").forEach(b => b.onclick = () => { push(); p.border.style = b.dataset.bs; draw(); renderPanel(); });
+      panel.querySelectorAll("[data-bc]").forEach(b => b.onclick = () => { push(); p.border.color = b.dataset.bc; draw(); renderPanel(); });
+      const bf = panel.querySelector("#bcFree"); if(bf) bf.onchange = e => { push(); p.border.color = e.target.value; draw(); renderPanel(); };
       const cb = panel.querySelector("#cut"), ub = panel.querySelector("#uncut");
       if(cb) cb.onclick = removeBg;
-      if(ub) ub.onclick = () => { img = origImg; cut = false; draw(); renderPanel(); };
+      if(ub) ub.onclick = () => { m.img = m.orig; m.cut = false; draw(); renderPanel(); };
+      panel.querySelector("#pdel").onclick = () => { push(); st.photos.splice(st.photos.indexOf(p), 1); const top = st.photos[st.photos.length - 1]; selP = top ? top.id : null; sel = top ? "photo" : null; draw(); renderPanel(); };
     }
   } else if(tool === "text"){
-    const t = typeof sel === "number" ? st.texts[sel] : null;
+    const t = typeof sel === "number" && st.texts[sel] && !st.texts[sel].stk ? st.texts[sel] : null;
     panel.innerHTML = `<h2>テキスト</h2>
       <button class="tile" type="button" id="addT"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h14M12 6v13M9 19h6"/></svg>文字を追加する</button>
       ${t ? `<div class="row"><label for="tx">文字（全角10文字まで）</label><input type="text" id="tx" maxlength="20" value="${esc(t.text)}"></div>
@@ -331,7 +527,7 @@ function renderPanel(){
       <div class="btns"><button type="button" id="tdel" class="danger">この文字を消す</button></div>
       <p class="help">文字は指やマウスでドラッグして動かせます。</p>` : `<p class="help">お名前や日付、短いメッセージを入れられます（入れなくても作れます）。</p>`}`;
     panel.querySelector("#addT").onclick = () => {
-      if(st.texts.length >= 3){ toast("文字は3つまで入れられます"); return; }
+      if(st.texts.filter(x => !x.stk).length >= 3){ toast("文字は3つまで入れられます"); return; }
       push(); st.texts.push({ text: "MOMO", font: "dancing", color: "#ffffff", size: Math.round(150 * U), x: PW / 2, y: PH * .82, rot: 0, shadow: true });
       sel = st.texts.length - 1; draw(); renderPanel();
     };
@@ -348,7 +544,32 @@ function renderPanel(){
       ts.oninput = () => { st.texts[i].size = +ts.value; draw(); };
       tr.oninput = () => { st.texts[i].rot = +tr.value; draw(); };
       panel.querySelector("#tsh").onchange = e => { push(); st.texts[i].shadow = e.target.checked; draw(); };
-      panel.querySelector("#tdel").onclick = () => { push(); st.texts.splice(i, 1); sel = st.photo ? "photo" : null; draw(); renderPanel(); };
+      panel.querySelector("#tdel").onclick = () => { push(); st.texts.splice(i, 1); sel = cur() ? "photo" : null; draw(); renderPanel(); };
+    }
+  } else if(tool === "deco"){
+    const t = typeof sel === "number" && st.texts[sel] && st.texts[sel].stk ? st.texts[sel] : null, d = t ? STICKERS.find(x => x.id === t.stk) : null;
+    panel.innerHTML = `<h2>スタンプ</h2><p class="help">押すと真ん中に追加されます。指やマウスで好きな場所へ動かせます（${MAX_STK}個まで）。</p>
+      <div class="swatch bg100" id="stks" style="grid-template-columns:repeat(6,1fr)">${STICKERS.map(x => `<button type="button" data-stk="${x.id}" style="border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;padding:0" aria-label="スタンプ">${x.emoji ? x.emoji : `<img src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(stickerSvg(x.id, x.c))}" alt="" style="width:80%;height:80%">`}</button>`).join("")}</div>
+      ${t ? `<h2 style="font-size:13px;margin-top:6px">選んでいるスタンプ</h2>
+      <div class="row"><label for="ks">大きさ</label><input type="range" id="ks" min="40" max="700" value="${t.size}"></div>
+      <div class="row"><label for="kr">回転</label><input type="range" id="kr" min="-180" max="180" value="${t.rot || 0}"></div>
+      ${d && !d.emoji ? `<div class="row"><label>色</label><div class="swatch" id="kc">${STK_COLORS.map(h => `<button type="button" data-kc="${h}" aria-pressed="${t.color === h}" style="background:${h}"></button>`).join("")}</div><input type="color" id="kcFree" class="free" value="${t.color}"></div>` : ""}
+      <div class="btns"><button type="button" id="kdup">複製する</button><button type="button" id="kdel" class="danger">このスタンプを消す</button></div>` : ""}`;
+    panel.querySelectorAll("[data-stk]").forEach(b => b.onclick = () => {
+      if(st.texts.filter(x => x.stk).length >= MAX_STK){ toast("スタンプは" + MAX_STK + "個まで入れられます"); return; }
+      const x = STICKERS.find(y => y.id === b.dataset.stk);
+      push(); st.texts.push({ stk: x.id, text: "", color: x.c || "#ffffff", size: Math.round(Math.min(PW, PH) * .22), x: PW / 2 + (Math.random() - .5) * PW * .2, y: PH / 2 + (Math.random() - .5) * PH * .1, rot: 0 });
+      sel = st.texts.length - 1; draw(); renderPanel();
+    });
+    if(t){
+      const i = sel, ks = panel.querySelector("#ks"), kr = panel.querySelector("#kr");
+      ks.onpointerdown = kr.onpointerdown = () => push();
+      ks.oninput = () => { st.texts[i].size = +ks.value; draw(); };
+      kr.oninput = () => { st.texts[i].rot = +kr.value; draw(); };
+      panel.querySelectorAll("[data-kc]").forEach(b => b.onclick = () => { push(); st.texts[i].color = b.dataset.kc; draw(); renderPanel(); });
+      const kf = panel.querySelector("#kcFree"); if(kf) kf.onchange = e => { push(); st.texts[i].color = e.target.value; draw(); renderPanel(); };
+      panel.querySelector("#kdup").onclick = () => { push(); const c2 = { ...st.texts[i], x: st.texts[i].x + PW * .06, y: st.texts[i].y + PW * .06 }; st.texts.push(c2); sel = st.texts.length - 1; draw(); renderPanel(); };
+      panel.querySelector("#kdel").onclick = () => { push(); st.texts.splice(i, 1); sel = cur() ? "photo" : null; draw(); renderPanel(); };
     }
   } else if(tool === "bg"){
     panel.innerHTML = `<h2>背景色</h2><p class="help">写真が全体をおおっていないときに見える色です。</p>
@@ -360,21 +581,23 @@ function renderPanel(){
     panel.querySelector("#bgFree").onchange = e => { push(); st.bg = e.target.value; draw(); renderPanel(); };
   } else {
     panel.innerHTML = `<h2>レイヤー</h2><p class="help">選んだものを動かしたり、文字を直したりできます。</p>
-      <div class="layers">${st.texts.map((t, i) => `<button type="button" data-l="${i}" aria-pressed="${sel === i}">文字：${esc(t.text) || "（空）"}<span>›</span></button>`).reverse().join("")}
-      ${st.photo ? `<button type="button" data-l="photo" aria-pressed="${sel === "photo"}">写真<span>›</span></button>` : ""}</div>`;
+      <div class="layers">${st.texts.map((t, i) => `<button type="button" data-l="${i}" aria-pressed="${sel === i}">${t.stk ? "スタンプ：" + ((STICKERS.find(x => x.id === t.stk) || {}).emoji || "♡") : "文字：" + (esc(t.text) || "（空）")}<span>›</span></button>`).reverse().join("")}
+      ${st.photos.map((x, i) => `<button type="button" data-l="p:${x.id}" aria-pressed="${sel === "photo" && selP === x.id}">写真${NUM(i)}<span>›</span></button>`).reverse().join("")}</div>`;
     panel.querySelectorAll("[data-l]").forEach(b => b.onclick = () => {
-      const v = b.dataset.l; sel = v === "photo" ? "photo" : +v; tool = v === "photo" ? "photo" : "text";
+      const v = b.dataset.l, isP = v.startsWith("p:"); if(isP) selP = v.slice(2); sel = isP ? "photo" : +v; tool = isP ? "photo" : (st.texts[+v].stk ? "deco" : "text");
       document.querySelectorAll(".rail button").forEach(x => x.setAttribute("aria-pressed", x.dataset.tool === tool)); draw(); renderPanel();
     });
   }
 }
-function syncSliders(){ const sc = document.getElementById("sc"), rt = document.getElementById("rt"); if(sc && st.photo){ sc.value = Math.round(st.photo.scale * 100); rt.value = Math.round(st.photo.rot); } }
+function syncSliders(){ const sc = document.getElementById("sc"), rt = document.getElementById("rt"); if(sc && cur()){ sc.value = Math.round(cur().scale * 100); rt.value = Math.round(cur().rot); } }
 
 /* ===== デザインの確認 → カートへ ===== */
 document.getElementById("confirmBtn").onclick = () => {
-  if(!st.photo){ toast("写真を入れてください"); tool = "photo"; renderPanel(); return; }
-  if(uploading){ toast("写真を送信中です。少しお待ちください"); return; }
-  if(!photoFileId){ toast("写真の送信に失敗しています。写真を選び直してください"); return; }
+  if(!st.photos.length){ toast("写真を入れてください"); tool = "photo"; renderPanel(); return; }
+  if(anyUploading()){ toast("写真を送信中です。少しお待ちください"); return; }
+  const bad = st.photos.findIndex(p => !media[p.id].fileId);
+  if(bad >= 0){ toast("写真" + NUM(bad) + "の送信に失敗しています。その写真を消して、選び直してください"); selP = st.photos[bad].id; sel = "photo"; tool = "photo"; renderPanel(); draw(); return; }
+  const fileIds = st.photos.map(p => media[p.id].fileId), cut = st.photos.some(p => media[p.id].cut);
   const out = document.createElement("canvas"); out.width = PW; out.height = PH;
   const oc = out.getContext("2d"); paint(oc, 1, true);
   const png = !st.bg;   // 素材の色を残すときは、何も印刷しない部分を透明にする
@@ -382,12 +605,16 @@ document.getElementById("confirmBtn").onclick = () => {
   const prev = document.createElement("canvas"); prev.width = Math.round(PW * .25); prev.height = Math.round(PH * .25);
   const pc = prev.getContext("2d"); paint(pc, .25, false);
   const thumb = prev.toDataURL("image/jpeg", .85);
+  // お客様が画面で見ている完成イメージ（ケースの形・カメラの穴・素材の色ごと）。LICOが配置を確認するために保存する
+  const look = document.createElement("canvas"); look.width = Math.round(PW * .6); look.height = Math.round(PH * .6);
+  const lc = look.getContext("2d"); lc.fillStyle = "#ffffff"; lc.fillRect(0, 0, look.width, look.height); paint(lc, .6, false);
+  const lookData = look.toDataURL("image/jpeg", .9);
   const host = document.getElementById("modalHost");
   host.innerHTML = `<div class="modal" id="md"><div class="box">
     <img src="${thumb}" alt="できあがりイメージ">
     <div><h2>デザインの確認</h2>
       <dl><dt>商品</dt><dd>${esc(PR.name)}</dd>${PR.optionLabel ? `<dt>${esc(PR.optionLabel)}</dt><dd>${esc(optLabel)}</dd>` : ""}${CC ? `<dt>ケースの色</dt><dd>${esc(CC.label)}</dd>` : ""}<dt>数量</dt><dd>${qty}個</dd>
-      <dt>文字</dt><dd>${st.texts.length ? st.texts.map(t => esc(t.text)).join("／") : "なし"}</dd><dt>背景透過</dt><dd>${cut ? "あり" : "なし"}</dd>
+      <dt>文字</dt><dd>${st.texts.some(t => !t.stk) ? st.texts.filter(t => !t.stk).map(t => esc(t.text)).join("／") : "なし"}</dd><dt>スタンプ</dt><dd>${st.texts.filter(t => t.stk).length}個</dd><dt>写真</dt><dd>${st.photos.length}枚（${st.photos.map((_, i) => NUM(i)).join("")}）</dd><dt>背景透過</dt><dd>${cut ? "あり" : "なし"}</dd>
       <dt>金額</dt><dd><b>${yen(unit * qty)}</b>（税込）</dd></dl>
       <p class="help">画面の色と実際の仕上がりは少し異なることがあります。${PR.kind === "phone" ? "カメラの穴の部分は印刷されません。" : esc(PR.note || "")}</p>
       <div class="act"><button class="btn" type="button" id="toCart">この内容でカートに入れる</button><button class="btn btn-line" type="button" id="back">デザインを直す</button></div>
@@ -396,11 +623,14 @@ document.getElementById("confirmBtn").onclick = () => {
   host.querySelector("#toCart").onclick = async e => {
     e.target.disabled = true; document.getElementById("mdState").textContent = "できあがり画像を送っています…";
     try{
-      const r = await api({ action: "uploadPhoto", name: png ? "design.png" : "design.jpg", mime: png ? "image/png" : "image/jpeg", data: full.split(",")[1] });
+      const [r, rl] = await Promise.all([
+        api({ action: "uploadPhoto", name: png ? "design.png" : "design.jpg", mime: png ? "image/png" : "image/jpeg", data: full.split(",")[1] }),
+        api({ action: "uploadPhoto", name: "preview.jpg", data: lookData.split(",")[1] })
+      ]);
       const cart = getCart();
-      cart.push({ key: Date.now().toString(36), productId: PR.id, option: optLabel, caseColor: CC ? CC.label : "", variant: variant ? variant.id : "", model: optLabel || PR.short, qty, fileId: photoFileId, designFileId: r.fileId, thumb,
-        cut, text: st.texts.map(t => t.text).join("／"), font: st.texts.map(t => (P.fonts.find(f => f.id === t.font) || {}).label).join("／"),
-        color: st.texts.map(t => colorName(t.color)).join("／") });
+      cart.push({ key: Date.now().toString(36), productId: PR.id, option: optLabel, caseColor: CC ? CC.label : "", variant: variant ? variant.id : "", model: optLabel || PR.short, qty, fileId: fileIds[0], fileIds, designFileId: r.fileId, previewFileId: rl.fileId, thumb,
+        cut, text: st.texts.filter(t => !t.stk).map(t => t.text).join("／"), font: st.texts.filter(t => !t.stk).map(t => (P.fonts.find(f => f.id === t.font) || {}).label).join("／"),
+        color: st.texts.filter(t => !t.stk).map(t => colorName(t.color)).join("／") });
       setCart(cart); location.href = "cart.html?added=1";
     }catch(err){ document.getElementById("mdState").textContent = err.message; e.target.disabled = false; }
   };

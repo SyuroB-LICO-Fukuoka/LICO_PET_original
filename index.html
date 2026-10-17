@@ -17,8 +17,8 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"OnlineStore","name":"ITTENMON","url":"https://syurob-lico-fukuoka.github.io/LICO_PET_original/","parentOrganization":{"@type":"Organization","name":"株式会社かむらっど"},"sameAs":["https://syurob-lico-fukuoka.github.io/syuroB-LICO/"]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/shop.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&family=Shippori+Mincho:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shop.css?v=1017a">
 <style>
 .hero{position:relative;background:var(--bg-sub);overflow:hidden}
 .hero-in{display:grid;gap:24px;align-items:center;padding-block:40px}
@@ -61,13 +61,33 @@ section.sec{padding-block:72px}
 .pcard .n{font-size:15px;font-weight:500}
 .pcard .pr{font-family:var(--f-en);font-size:17px}
 .pcard .pr small{font-size:11px;color:var(--sub);margin-left:3px}
+.gal{display:grid;gap:28px;align-items:center}
+@media(min-width:900px){.gal{grid-template-columns:1fr 1.25fr;gap:56px}}
+.gal h3{font-family:"Shippori Mincho",serif;font-weight:600;font-size:clamp(22px,3vw,30px);line-height:1.6;margin:8px 0 14px}
+.gal p{color:#555;margin-bottom:22px}
+.gal-pics{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+.gal-pics a{position:relative;overflow:hidden;background:var(--img);display:block}
+.gal-pics a:first-child{grid-row:span 2}
+.gal-pics img{width:100%;height:100%;object-fit:cover;aspect-ratio:3/4;transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.gal-pics a:not(:first-child) img{aspect-ratio:1}
+.gal-pics a:hover img{transform:scale(1.04)}
+.gal-pics.one{grid-template-columns:1fr}
+.gal-pics.one img{aspect-ratio:4/5;max-height:620px}
+.gal-pics span{position:absolute;left:0;bottom:0;background:rgba(255,255,255,.92);font-size:11.5px;padding:4px 10px}
 </style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="img/app/shop-180.png">
+<link rel="icon" href="img/app/shop-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ITTENMON">
 </head>
 <body>
 <div id="site-header"></div>
 
 <div class="hero"><div class="wrap hero-in">
-  <img src="img/phonecase.jpg?v=1015e" alt="ペットの写真をプリントした白・黒・透明のスマホケース">
+  <img src="img/phonecase.jpg?v=1017a" alt="ペットの写真をプリントした白・黒・透明のスマホケース">
   <div>
     <p class="sub">PHOTO CASE SERIES</p>
     <h1>いちばん好きな写真を、<br>毎日持ち歩こう。</h1>
@@ -83,7 +103,19 @@ section.sec{padding-block:72px}
   </div>
 </section>
 
-<section class="sec bg-sub" id="howto">
+<section class="sec bg-sub" id="gallery">
+  <div class="wrap gal">
+    <div>
+      <span class="en" style="font-size:12px;color:var(--accent)">GALLERY</span>
+      <h3>写真から生まれた、<br>世界にひとつの作品たち。</h3>
+      <p>どんな写真が、どんな仕上がりになるのか。LICOのメンバーがおつくりした作品を、ギャラリーでご覧いただけます。</p>
+      <a href="gallery.html" class="btn">ギャラリーを見る</a>
+    </div>
+    <div class="gal-pics" id="galPics"></div>
+  </div>
+</section>
+
+<section class="sec" id="howto">
   <div class="wrap">
     <div class="sec-title"><span class="en">HOW TO ORDER</span><h2>ご注文の流れ</h2></div>
     <ol class="howto">
@@ -95,9 +127,9 @@ section.sec{padding-block:72px}
   </div>
 </section>
 
-<section class="sec" id="gift">
+<section class="sec bg-sub" id="gift">
   <div class="wrap two">
-    <img src="img/phonecase.jpg?v=1015e" alt="ギフトにもおすすめのオリジナルケース" style="aspect-ratio:4/3;object-fit:cover;width:100%">
+    <img src="img/phonecase.jpg?v=1017a" alt="ギフトにもおすすめのオリジナルケース" style="aspect-ratio:4/3;object-fit:cover;width:100%">
     <div>
       <span class="en" style="font-size:12px;color:var(--accent)">GIFT</span>
       <h3>誕生日や記念日の、<br>心に残る贈りものに。</h3>
@@ -107,7 +139,7 @@ section.sec{padding-block:72px}
   </div>
 </section>
 
-<section class="sec bg-sub" id="news">
+<section class="sec" id="news">
   <div class="wrap">
     <div class="sec-title"><span class="en">NEWS</span><h2>お知らせ</h2></div>
     <ul class="news">
@@ -116,9 +148,9 @@ section.sec{padding-block:72px}
   </div>
 </section>
 
-<section class="sec" id="about">
+<section class="sec bg-sub" id="about">
   <div class="wrap two">
-    <img src="img/sample-work.jpg?v=1015e" alt="LICOでのものづくり" style="aspect-ratio:1;object-fit:cover;width:100%">
+    <img src="img/sample-work.jpg?v=1017a" alt="LICOでのものづくり" style="aspect-ratio:1;object-fit:cover;width:100%">
     <div>
       <span class="en" style="font-size:12px;color:var(--accent)">ABOUT US</span>
       <h3>ひとつひとつ、<br>LICOのメンバーがつくっています。</h3>
@@ -129,9 +161,10 @@ section.sec{padding-block:72px}
 </section>
 
 <div id="site-footer"></div>
-<script src="js/config.js?v=1015e"></script>
-<script src="js/common.js?v=1015e"></script>
-<script src="js/chatbot.js?v=1015e" defer></script>
+<script src="js/config.js?v=1017a"></script>
+<script src="js/common.js?v=1017a"></script>
+<script src="js/gallery.js?v=1017a"></script>
+<script src="js/chatbot.js?v=1017a" defer></script>
 <script>
   const {S, yen, chrome} = window.LICO;
   chrome();
@@ -140,6 +173,12 @@ section.sec{padding-block:72px}
     <div class="ph"><img src="${esc(p.images[0])}" alt="${esc(p.name)}の見本" loading="lazy"></div>
     <span class="s">${esc(p.series)}</span><span class="n">${esc(p.name)}</span>
     <span class="pr">${p.kind === "variant" ? p.variants.map(v => yen(v.price)).join("〜") : yen(p.price)}<small>（税込）</small></span></a>`).join("");
+  // ギャラリー：おすすめ（pick）→新しい順に最大3件
+  const G = (window.ITTENMON_GALLERY || []).slice().sort((a,b) => (b.pick?1:0)-(a.pick?1:0) || String(b.date||"").localeCompare(String(a.date||""))).slice(0, 3);
+  const gp = document.getElementById("galPics");
+  if(!G.length) document.getElementById("gallery").hidden = true;
+  gp.classList.toggle("one", G.length < 3);
+  gp.innerHTML = (G.length < 3 ? G.slice(0,1) : G).map(w => `<a href="gallery.html?item=${encodeURIComponent(w.product)}"><img src="${esc(w.img)}" alt="${esc(w.title)}" loading="lazy"><span>${esc(w.title)}</span></a>`).join("");
 </script>
 </body>
 </html>

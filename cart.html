@@ -8,7 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/shop.css">
+<link rel="stylesheet" href="css/shop.css?v=1017a">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="img/app/shop-180.png">
+<link rel="icon" href="img/app/shop-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ITTENMON">
 </head>
 <body>
 <div id="site-header"></div>
@@ -18,15 +25,17 @@
 </main>
 <div id="site-footer"></div>
 
-<script src="js/config.js?v=1015e"></script>
-<script src="js/common.js?v=1015e"></script>
-<script src="js/chatbot.js?v=1015e" defer></script>
+<script src="js/config.js?v=1017a"></script>
+<script src="js/common.js?v=1017a"></script>
+<script src="js/chatbot.js?v=1017a" defer></script>
 <script>
 (() => {
   const {S, yen, esc, isCafe, cafeId, getCart, setCart, subtotal, shipping, api, toast, chrome, qs, product, unitPrice, optionText} = window.LICO;
   chrome();
   const cafe = isCafe();
-  const f = { pay: cafe ? "cash" : "card", name:"", kana:"", email:"", tel:"", delivery: cafe ? "pickup" : "ship", zip:"", address:"", note:"", agree:false };
+  const f = { pay: cafe ? "cash" : "card", name:"", kana:"", email:"", tel:"", delivery: cafe ? "pickup" : "ship", zip:"", address:"", note:"", agree:false, coupon:"", couponMsg:"" };
+  // クーポン：いちばん高い商品1個分が0円になる（本当に使えるかは注文のときにサーバーで確かめる）
+  const couponOff = () => f.coupon ? Math.max(0, ...getCart().map(i => unitPrice(i))) : 0;
   const $ = s => document.querySelector(s);
   if(qs.get("added")) setTimeout(()=>toast("カートに入れました"),100);
 
@@ -36,7 +45,7 @@
       $("#root").innerHTML = `<div class="empty-cart"><p>カートは空です。</p><a class="btn" href="product.html">商品を見る</a></div>`;
       return;
     }
-    const sub = subtotal(), ship = shipping(f.delivery), total = sub + ship;
+    const sub = subtotal(), ship = shipping(f.delivery), off = couponOff(), total = Math.max(0, sub + ship - off), free = total === 0;
     $("#root").innerHTML = `
     ${qs.get("canceled")?`<p class="alert" style="margin-bottom:20px">お支払いが完了していません。内容をご確認のうえ、もう一度お手続きください。</p>`:""}
     <div class="cart-grid">
@@ -63,7 +72,7 @@
         ${cafe?`<div class="fld"><span class="lbl">お支払い方法</span><div class="seg">
           <button type="button" data-pay="cash" aria-pressed="${f.pay==="cash"}">現金</button>
           <button type="button" data-pay="card" aria-pressed="${f.pay==="card"}">クレジットカード</button></div></div>
-          <p class="info">${f.pay==="cash"?"お代金はカフェでお受け取りください。カフェから毎週まとめてLICOへお振込みいただき、確認してから製作を始めます。":"次の画面で、お客様にカード情報を入力していただきます。お支払いが済むと製作を始めます。"}</p>`:""}
+          <p class="info">${f.pay==="cash"?"お代金はカフェのレジでお支払いください。お支払いの確認後に製作を始めます。":"次の画面でカード情報を入力してお支払いください。お支払いが済むと製作を始めます。"}</p>`:""}
         <div class="grid2">
           <div class="fld"><label for="c-name">お名前<span class="req">必須</span></label><input type="text" id="c-name" autocomplete="name" value="${esc(f.name)}"></div>
           <div class="fld"><label for="c-kana">フリガナ<span class="req">必須</span></label><input type="text" id="c-kana" value="${esc(f.kana)}"></div>
@@ -78,21 +87,26 @@
         ${f.delivery==="ship"?`<div class="grid2">
           <div class="fld"><label for="c-zip">郵便番号<span class="req">必須</span></label><input type="text" id="c-zip" inputmode="numeric" autocomplete="postal-code" placeholder="819-0161" value="${esc(f.zip)}"></div>
           <div class="fld" style="grid-column:1/-1"><label for="c-addr">住所<span class="req">必須</span></label><input type="text" id="c-addr" autocomplete="street-address" value="${esc(f.address)}"></div>
-        </div>`:(cafe?`<p class="info">受け取り場所：ご注文いただいたカフェ。できあがり次第ご連絡します。</p>`:`<p class="info">受け取り場所：店頭（福岡市西区今宿東1丁目19-14）。できあがり次第ご連絡します。</p>`)}
+        </div>`:(cafe?`<p class="info">受け取り場所：${esc(window.LICO.cafeName())}（ご注文いただいたカフェ）。できあがり次第ご連絡します。</p>`:`<p class="info">受け取り場所：店頭（福岡市西区今宿東1丁目19-14）。できあがり次第ご連絡します。</p>`)}
         <div class="fld"><label for="c-note">ご要望など<span class="opt">任意</span></label><textarea id="c-note" rows="3">${esc(f.note)}</textarea></div>
+        <div class="fld"><label for="c-coupon">クーポンコード<span class="opt">お持ちの方</span></label>
+          <div style="display:flex;gap:8px">${f.coupon?`<input type="text" id="c-coupon" value="${esc(f.coupon)}" disabled style="flex:1"><button type="button" class="btn btn-line" data-uncoupon="1" style="padding:8px 14px">取り消す</button>`:`<input type="text" id="c-coupon" autocomplete="off" placeholder="ITTEN-XXXXXX" style="flex:1;text-transform:uppercase"><button type="button" class="btn btn-line" data-coupon="1" style="padding:8px 14px">使う</button>`}</div>
+          ${f.couponMsg?`<p class="info" style="margin-top:6px">${esc(f.couponMsg)}</p>`:""}</div>
         <div class="totals">
           <div><span>商品小計（${cart.reduce((a,i)=>a+i.qty,0)}個）</span><span>${yen(sub)}</span></div>
+          ${off?`<div><span>クーポン（商品1個分）</span><span>−${yen(off)}</span></div>`:""}
           <div><span>送料</span><span>${ship?yen(ship):"無料"}</span></div>
           <div class="grand"><span>合計（税込）</span><span>${yen(total)}</span></div>
         </div>
         <label class="check"><input type="checkbox" id="c-agree" ${f.agree?"checked":""}> <span><a href="tokushoho.html" target="_blank" style="text-decoration:underline">特定商取引法に基づく表記</a>と<a href="tokushoho.html#privacy" target="_blank" style="text-decoration:underline">プライバシーポリシー</a>に同意します</span></label>
         <div id="msg"></div>
-        <button class="btn btn-block" type="submit" id="go">${cafe&&f.pay==="cash"?"この内容で受け付ける":"カード決済へ進む"}</button>
-        ${cafe&&f.pay==="cash"?"":`<p class="p-note" style="text-align:center">次の画面で、カード情報を安全に入力していただきます（Stripe）。</p>`}
+        <button class="btn btn-block" type="submit" id="go">${goLabel(free)}</button>
+        ${free||(cafe&&f.pay==="cash")?"":`<p class="p-note" style="text-align:center">次の画面で、お支払い方法を選んで安全にお支払いいただけます（Stripe）。</p>`}
       </form>
     </div>`;
   }
 
+  const goLabel = free => free ? "この内容で注文する（0円）" : (cafe&&f.pay==="cash" ? "この内容で受け付ける" : "お支払いへ進む");
   function pull(){
     const v = id => { const el=document.getElementById(id); return el ? el.value.trim() : ""; };
     f.name=v("c-name"); f.kana=v("c-kana"); f.tel=v("c-tel"); f.email=v("c-email"); f.note=document.getElementById("c-note")?.value||"";
@@ -109,6 +123,14 @@
     if(t.dataset.rm){ pull(); setCart(cart.filter(i=>i.key!==t.dataset.rm)); render(); }
     if(t.dataset.dl){ pull(); f.delivery=t.dataset.dl; render(); }
     if(t.dataset.pay){ pull(); f.pay=t.dataset.pay; render(); }
+    if(t.dataset.uncoupon){ pull(); f.coupon=""; f.couponMsg=""; render(); }
+    if(t.dataset.coupon){
+      pull(); const code = (document.getElementById("c-coupon")?.value||"").trim();
+      if(!code){ f.couponMsg="クーポンコードを入れてください。"; render(); return; }
+      t.disabled = true; t.textContent = "確認中…";
+      api({action:"checkCoupon", code}).then(r=>{ f.coupon=r.code; f.couponMsg="クーポンを使えます。商品1個分が0円になります。"; render(); })
+        .catch(err=>{ f.coupon=""; f.couponMsg=err.message; render(); });
+    }
   });
 
   document.addEventListener("submit", async e=>{
@@ -126,15 +148,15 @@
     try{
       const cart = getCart();
       const r = await api({ action:"createOrder", mode: cafe?"cafe":"online", cafeId: cafeId(),
-        items: cart.map(i=>({productId:i.productId||"phone", variant:i.variant||"", model:optionText(i)||product(i.productId||"phone").short, fileId:i.fileId, designFileId:i.designFileId, text:i.text, font:i.font, color:i.color, qty:i.qty})),
+        items: cart.map(i=>({productId:i.productId||"phone", variant:i.variant||"", model:optionText(i)||product(i.productId||"phone").short, fileId:i.fileId, fileIds:i.fileIds||[i.fileId], designFileId:i.designFileId, previewFileId:i.previewFileId||"", text:i.text, font:i.font, color:i.color, qty:i.qty})),
         customer: {name:f.name, kana:f.kana, tel:f.tel, email:f.email, zip:f.zip, address:f.address, note:f.note},
-        delivery: f.delivery, payMethod: f.pay });
+        delivery: f.delivery, payMethod: f.pay, coupon: f.coupon });
       if(r.checkoutUrl){ location.href = r.checkoutUrl; return; }
       setCart([]);
-      location.href = "complete.html?order=" + encodeURIComponent(r.orderNo);
+      location.href = "complete.html?order=" + encodeURIComponent(r.orderNo) + (r.free ? "&free=1" : "");
     }catch(err){
       $("#msg").innerHTML = `<p class="alert">${esc(err.message)}</p>`;
-      go.disabled = false; go.textContent = cafe&&f.pay==="cash"?"この内容で受け付ける":"カード決済へ進む";
+      go.disabled = false; go.textContent = goLabel(Math.max(0, subtotal() + shipping(f.delivery) - couponOff()) === 0);
     }
   });
 

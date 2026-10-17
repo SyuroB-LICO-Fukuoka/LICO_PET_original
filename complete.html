@@ -8,7 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/shop.css">
+<link rel="stylesheet" href="css/shop.css?v=1017a">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="img/app/shop-180.png">
+<link rel="icon" href="img/app/shop-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ITTENMON">
 </head>
 <body>
 <div id="site-header"></div>
@@ -17,9 +24,9 @@
   <div class="done-box" id="box"><div class="spinner" aria-label="確認中"></div></div>
 </main>
 <div id="site-footer"></div>
-<script src="js/config.js?v=1015e"></script>
-<script src="js/common.js?v=1015e"></script>
-<script src="js/chatbot.js?v=1015e" defer></script>
+<script src="js/config.js?v=1017a"></script>
+<script src="js/common.js?v=1017a"></script>
+<script src="js/chatbot.js?v=1017a" defer></script>
 <script>
 (async () => {
   const {S, esc, isCafe, setCart, api, chrome, qs} = window.LICO;
@@ -28,12 +35,20 @@
   const box = document.getElementById("box"), ttl = document.getElementById("ttl");
   const line = `<p>ご不明な点は、注文番号を添えてLINE（${esc(S.LINE_ID)}）でお問い合わせください。</p>`;
 
+  if(qs.get("free")){   // クーポンで0円になった注文（支払いなし）
+    setCart([]);
+    ttl.textContent = "ご注文ありがとうございました";
+    box.innerHTML = `<p>注文番号</p><p class="no">${esc(order)}</p>
+      <p>クーポンでのご注文を受け付けました。お支払いはありません。${isCafe() ? "" : "確認メールをお送りしています。"}ご注文から1か月ほどでお届けします。</p>
+      ${isCafe()?`<a class="btn" href="gallery.html">ほかのお客様の作品を見る</a>`:`<a class="btn" href="index.html">トップへ戻る</a>`}`;
+    return;
+  }
   if(isCafe() && !sid){   // カフェの現金受付（カード払いは下で確認する）
     setCart([]);
-    ttl.textContent = "受け付けました";
+    ttl.textContent = "ご注文を受け付けました";
     box.innerHTML = `<p>注文番号</p><p class="no">${esc(order)}</p>
-      <p>お代金（現金）はカフェでお受け取りください。カフェから毎週まとめてLICOへお振込みいただき、確認してから製作を始めます。</p>${line}
-      <a class="btn" href="product.html">次のお客様の受付へ</a>`;
+      <p>この画面をカフェのスタッフにお見せいただき、お代金をレジでお支払いください。お支払いの確認後に製作を始め、できあがったら${esc(window.LICO.cafeName())}でお渡しします。</p>${line}
+      <a class="btn" href="gallery.html">ほかのお客様の作品を見る</a>`;
     return;
   }
   try{
@@ -41,8 +56,8 @@
     setCart([]);
     ttl.textContent = "ご注文ありがとうございました";
     box.innerHTML = `<p>注文番号</p><p class="no">${esc(r.orderNo)}</p>
-      <p>${r.paid ? "お支払いを確認しました。確認メールをお送りしています。" : "お支払いの確認に少し時間がかかっています。確認ができしだいメールでお知らせします。"}</p>
-      ${line}${isCafe()?`<a class="btn" href="product.html">次のお客様の受付へ</a>`:`<a class="btn" href="index.html">トップへ戻る</a>`}`;
+      <p>${r.paid ? "お支払いを確認しました。確認メールをお送りしています。" : r.waiting ? "お支払い番号のご案内をメールでお送りしました。期限までにお支払いください。お支払いを確認しだい、製作を始めます。" : "お支払いの確認に少し時間がかかっています。確認ができしだいメールでお知らせします。"}</p>
+      ${line}${isCafe()?`<a class="btn" href="gallery.html">ほかのお客様の作品を見る</a>`:`<a class="btn" href="index.html">トップへ戻る</a>`}`;
   }catch(err){
     ttl.textContent = "ご注文の確認";
     box.innerHTML = `<p class="alert">${esc(err.message)}</p><p>お支払いが済んでいる場合は、確認メールをお待ちください。ご不明な点はLINEでお問い合わせください。</p><a class="btn btn-line" href="${esc(S.LINE_URL)}" target="_blank" rel="noopener">LINEで問い合わせる</a>`;

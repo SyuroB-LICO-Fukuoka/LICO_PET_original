@@ -14,6 +14,7 @@
   }catch(_){}
   const isCafe = () => { try{ return sessionStorage.getItem(KEY_MODE)==="cafe"; }catch(_){ return false; } };
   const cafeId = () => { try{ return sessionStorage.getItem("lico-cafe")||""; }catch(_){ return ""; } };
+  const cafeName = () => (S.CAFES||{})[cafeId()] || "カフェ";
 
   /* カート（写真本体は送信済みのファイルIDと、小さな見本画像だけを保存） */
   let mem = [];
@@ -94,10 +95,10 @@
     const head = document.getElementById("site-header");
     if(head){
       head.outerHTML = `
-      ${isCafe()?`<div class="mode-bar">店頭受付モード（カフェ）｜お支払いは毎週まとめて店頭で　<a href="staff.html" style="text-decoration:underline;margin-left:8px">受付確認画面へ →</a></div>`:`<div class="notice">${S.SHIPPING_FEE?`送料 全国一律 ${yen(S.SHIPPING_FEE)}`:"送料無料"}｜1点からおつくりします</div>`}
+      ${isCafe()?`<div class="mode-bar">${esc(cafeName())}でのご注文｜できあがったらこのカフェでお渡しします</div>`:`<div class="notice">${S.SHIPPING_FEE?`送料 全国一律 ${yen(S.SHIPPING_FEE)}`:"送料無料"}｜1点からおつくりします</div>`}
       <header class="site"><div class="wrap head">
         <a href="index.html" class="logo">${esc(S.SHOP_NAME)}</a>
-        <nav class="gnav"><a href="product.html">商品</a><a href="index.html#howto">ご注文の流れ</a><a href="index.html#gift">ギフト</a><a href="index.html#about">私たちについて</a><a href="product.html#faq">よくあるご質問</a></nav>
+        <nav class="gnav"><a href="product.html">商品</a><a href="gallery.html">ギャラリー</a><a href="index.html#howto">ご注文の流れ</a><a href="index.html#gift">ギフト</a><a href="index.html#about">私たちについて</a><a href="product.html#faq">よくあるご質問</a></nav>
         <a href="cart.html" class="cart-link" aria-label="カート"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7h14l-1.5 13h-11z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span class="cart-count" data-n="0">0</span></a>
       </div></header>`;
     }
@@ -106,15 +107,44 @@
       foot.outerHTML = `<footer class="site"><div class="wrap">
         <div class="foot">
           <div><div class="logo">${esc(S.SHOP_NAME)}</div><p style="margin-top:10px;color:#aaa">運営：株式会社かむらっど<br><a href="https://syurob-lico-fukuoka.github.io/syuroB-LICO/" target="_blank" rel="noopener" style="text-decoration:underline">就労継続支援B型 LICO（リコ）</a></p></div>
-          <div><h4>ショップ</h4><ul><li><a href="product.html">商品</a></li><li><a href="index.html#howto">ご注文の流れ</a></li><li><a href="cart.html">カート</a></li></ul></div>
-          <div><h4>ご案内</h4><ul><li><a href="tokushoho.html">特定商取引法に基づく表記</a></li><li><a href="tokushoho.html#privacy">プライバシーポリシー</a></li><li><a href="${esc(S.LINE_URL)}" target="_blank" rel="noopener">LINEでお問い合わせ</a></li><li style="margin-top:10px"><a href="staff.html" style="color:#888;font-size:11px">スタッフ用</a></li></ul></div>
+          <div><h4>ショップ</h4><ul><li><a href="product.html">商品</a></li><li><a href="gallery.html">ギャラリー（制作実績）</a></li><li><a href="index.html#howto">ご注文の流れ</a></li><li><a href="cart.html">カート</a></li></ul></div>
+          <div><h4>ご案内</h4><ul><li><a href="tokushoho.html">特定商取引法に基づく表記</a></li><li><a href="tokushoho.html#privacy">プライバシーポリシー</a></li><li><a href="${esc(S.LINE_URL)}" target="_blank" rel="noopener">LINEでお問い合わせ</a></li><li><a href="#" data-install="1">アプリで使う（ホーム画面に追加）</a></li><li style="margin-top:10px"><a href="staff.html" style="color:#888;font-size:11px">スタッフ用（受注管理）</a></li></ul></div>
         </div>
         <div class="pay"><span>VISA</span><span>Mastercard</span><span>JCB</span><span>AMEX</span><span>Apple Pay</span><span>Google Pay</span></div>
         <p class="copy">© 2026 ${esc(S.SHOP_NAME)}</p>
       </div></footer>`;
     }
+    // スマホではアプリのように画面下にタブを出す
+    if(head || foot){
+      const here = (location.pathname.split("/").pop() || "index.html");
+      const tab = (href, label, icon, extra) => `<a href="${href}" ${here===href.split("#")[0]?'aria-current="page"':""}>${icon}<span>${label}</span>${extra||""}</a>`;
+      const nav = document.createElement("nav"); nav.className = "tabbar"; nav.setAttribute("aria-label","メニュー");
+      nav.innerHTML = tab("index.html","ホーム",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>')
+        + tab("product.html","つくる",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><circle cx="12" cy="11" r="3"/></svg>')
+        + tab("gallery.html","ギャラリー",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>')
+        + tab("cart.html","カート",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7h14l-1.5 13h-11z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>','<span class="cart-count" data-n="0">0</span>');
+      document.body.appendChild(nav); document.body.classList.add("has-tabbar");
+    }
+    document.querySelectorAll("[data-install]").forEach(a => a.onclick = e => { e.preventDefault(); installApp(); });
     updateCount();
   }
 
-  window.LICO = { S, yen, esc, isCafe, cafeId, getCart, setCart, subtotal, shipping, api, loadImage, toJpeg, toast, chrome, qs, product, unitPrice, optionText, phoneModel, shapeOf, shapePath, shapeIcon };
+  /* ホーム画面に追加（アプリとして使う）。Androidはそのまま追加、iPhoneは手順を表示 */
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; });
+  function installApp(){
+    if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.finally(() => { deferredPrompt = null; }); return; }
+    const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const box = document.createElement("div"); box.className = "install-modal";
+    box.innerHTML = `<div class="install-box" role="dialog" aria-label="ホーム画面に追加"><h3>ホーム画面に追加</h3>
+      ${standalone ? "<p>すでにアプリとして開いています。</p>" : ios ? "<ol><li>Safariでこのページを開きます</li><li>画面下の<b>共有ボタン</b>（四角から矢印が出ているマーク）を押します</li><li><b>「ホーム画面に追加」</b>を押します</li></ol><p>ホーム画面の「ITTENMON」アイコンから、アプリのように開けます。</p>"
+        : "<ol><li>ブラウザの右上の <b>︙</b> を押します</li><li><b>「ホーム画面に追加」</b>または<b>「アプリをインストール」</b>を選びます</li></ol>"}
+      <button type="button" class="btn btn-block">閉じる</button></div>`;
+    box.onclick = e => { if(e.target === box || e.target.tagName === "BUTTON") box.remove(); };
+    document.body.appendChild(box);
+  }
+  if("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+
+  window.LICO = { S, yen, esc, isCafe, cafeId, cafeName, installApp, getCart, setCart, subtotal, shipping, api, loadImage, toJpeg, toast, chrome, qs, product, unitPrice, optionText, phoneModel, shapeOf, shapePath, shapeIcon };
 })();
