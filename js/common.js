@@ -132,13 +132,19 @@
   /* ホーム画面に追加（アプリとして使う）。Androidはそのまま追加、iPhoneは手順を表示 */
   let deferredPrompt = null;
   window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; });
+  function iosSteps(name){
+    const ua = navigator.userAgent;
+    if(/Line\/|Instagram|FBAN|FBAV|GSA\/|YJApp/i.test(ua)) return '<p><b>LINEなどのアプリの中で開いているため、このままでは追加できません。</b></p><ol><li>画面の右上か右下の <b>「…」</b> や共有のマークを押します</li><li><b>「Safariで開く」</b>（または「ブラウザで開く」）を選びます</li><li>Safariで開いたら、もう一度このボタンを押して手順を見てください</li></ol>';
+    if(/CriOS/.test(ua)) return '<ol><li>アドレスバーの右の <b>共有ボタン</b>（四角から矢印が出ているマーク）を押します</li><li>下へスクロールして <b>「ホーム画面に追加」</b> を押します</li><li>右上の <b>「追加」</b> を押します</li></ol><p>見つからないときは、Safariで開いて同じ操作をしてください。</p>';
+    return '<ol><li>画面右下の <b>「…」</b> を押して <b>「共有」</b> を押します<br><span style="font-size:12px;color:#777">（「…」がない場合は、画面下の共有ボタン＝四角から矢印が出ているマーク）</span></li><li>出てきた一覧を <b>下へスクロール</b> して <b>「ホーム画面に追加」</b> を押します<br><span style="font-size:12px;color:#777">（見つからないときは一番下の「アクションを編集」から追加できます）</span></li><li><b>「Webアプリとして開く」</b> がオンになっているのを確かめて、右上の <b>「追加」</b> を押します</li></ol><p>ホーム画面の「' + name + '」アイコンから、アプリのように開けます。</p>';
+  }
   function installApp(){
     if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.finally(() => { deferredPrompt = null; }); return; }
     const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
     const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
     const box = document.createElement("div"); box.className = "install-modal";
     box.innerHTML = `<div class="install-box" role="dialog" aria-label="ホーム画面に追加"><h3>ホーム画面に追加</h3>
-      ${standalone ? "<p>すでにアプリとして開いています。</p>" : ios ? "<ol><li>Safariでこのページを開きます</li><li>画面下の<b>共有ボタン</b>（四角から矢印が出ているマーク）を押します</li><li><b>「ホーム画面に追加」</b>を押します</li></ol><p>ホーム画面の「ITTENMON」アイコンから、アプリのように開けます。</p>"
+      ${standalone ? "<p>すでにアプリとして開いています。</p>" : ios ? iosSteps("ITTENMON")
         : "<ol><li>ブラウザの右上の <b>︙</b> を押します</li><li><b>「ホーム画面に追加」</b>または<b>「アプリをインストール」</b>を選びます</li></ol>"}
       <button type="button" class="btn btn-block">閉じる</button></div>`;
     box.onclick = e => { if(e.target === box || e.target.tagName === "BUTTON") box.remove(); };
