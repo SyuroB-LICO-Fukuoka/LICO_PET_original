@@ -77,6 +77,21 @@
     return j;
   }
 
+  /* 閲覧数の記録（どのページがよく見られているかを受注管理で見るため）。名前などは送らず、端末ごとのランダムな番号だけ。
+     受注管理にログインしたことがある端末（スタッフ）は数えない */
+  function track(){
+    try{
+      if(!S.GAS_URL || navigator.webdriver || localStorage.getItem("ittenmon-staff")) return;
+      let vid = localStorage.getItem("ittenmon-vid");
+      if(!vid){ vid = Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); localStorage.setItem("ittenmon-vid", vid); }
+      const page = (location.pathname.split("/").pop() || "index.html").replace(/\.html$/, "") || "index";
+      let ref = ""; try{ const r = document.referrer && new URL(document.referrer); if(r && r.host !== location.host) ref = r.host; }catch(_){}
+      const body = JSON.stringify({action:"track", page, product: qs.get("product") || qs.get("id") || "", vid, mode: isCafe() ? "cafe" : "net", ref});
+      if(!(navigator.sendBeacon && navigator.sendBeacon(S.GAS_URL, new Blob([body], {type:"text/plain"})))) fetch(S.GAS_URL, {method:"POST", body, keepalive:true}).catch(()=>{});
+    }catch(_){}
+  }
+  track();
+
   /* 写真を長辺2400pxのJPEGにして送れる大きさにする */
   function loadImage(file){
     return new Promise((ok,ng)=>{ const u=URL.createObjectURL(file); const im=new Image(); im.onload=()=>{ok(im);}; im.onerror=()=>ng(new Error("この画像は読み込めませんでした。JPEGかPNGの写真を選んでください。")); im.src=u; });
