@@ -2,7 +2,7 @@
   "id": "./",
   "name": "ITTENMON｜写真でつくるオリジナルグッズ",
   "short_name": "ITTENMON",
-  "description": "お気に入りの写真で、世界にひとつのスマホケース・キーケース・名刺入れ・インテリアボードをつくれます。",
+  "description": "お気に入りの写真で、世界にひとつのスマホケース・名刺入れ・インテリアボードをつくれます。",
   "start_url": "./?source=app",
   "scope": "./",
   "display": "standalone",

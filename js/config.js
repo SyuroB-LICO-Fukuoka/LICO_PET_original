@@ -83,22 +83,6 @@ window.LICO_SHOP = {
       note: "ケースの形とカメラの位置は目安です。印刷はカメラの穴をよけて仕上げます。"
     },
     {
-      id: "keycase", kind: "color", series: "LEATHER SERIES",
-      name: "写真でつくる本革キーケース", short: "キーケース", price: 5500,
-      lead: "毎日持ち歩く鍵を、うちの子の写真といっしょに。\nやわらかな牛本革のキーケースに、写真や名前をプリントします。",
-      images: ["img/keycase.jpg?v=1015e"], optionLabel: "色",
-      size: "縦 約10cm × 横 約5.5cm × 厚さ 約2cm（キーフック6連・ナスカン付き）",
-      points: ["牛本革・男女兼用", "全12色から選べます", "表面に写真と文字をプリント"],
-      colors: [
-        { label: "ブラック", hex: "#1f1f1f" }, { label: "ダークブラウン", hex: "#4a3024" }, { label: "ライトブラウン", hex: "#a8744a" },
-        { label: "レッド", hex: "#b5302f" }, { label: "オレンジ", hex: "#d9792b" }, { label: "イエロー", hex: "#e2b33c" },
-        { label: "グリーン", hex: "#4f7a4a" }, { label: "ブルー", hex: "#2f5d9a" }, { label: "パープル", hex: "#6b4a7a" },
-        { label: "ピンク", hex: "#df7fa0" }, { label: "ライトピンク", hex: "#f2c1cc" }, { label: "サーモンピンク", hex: "#e89a86" }
-      ],
-      print: { w: 1100, h: 2000, shape: "round", r: 120, baseLabel: "革の色のまま（印刷しない）" },
-      note: "革の色によって、写真の色の見え方が少し変わります。明るい色の革ほど写真がはっきり出ます。"
-    },
-    {
       id: "cardcase", kind: "variant", series: "CARD CASE SERIES",
       name: "写真でつくるメタル名刺入れ", short: "名刺入れ", price: 4400,
       lead: "ステンレスの名刺入れに、好きな写真をプリント。\n名刺を渡すたびに話がはずむ、自分だけの名刺入れです。",
