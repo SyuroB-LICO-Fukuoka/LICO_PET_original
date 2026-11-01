@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&family=Zen+Maru+Gothic:wght@500;700&family=M+PLUS+Rounded+1c:wght@800&family=Noto+Serif+JP:wght@700&family=Shippori+Mincho:wght@600&family=Klee+One:wght@600&family=Yomogi&family=Kaisei+Decol:wght@700&family=Dancing+Script:wght@600&family=Great+Vibes&family=Pacifico&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/shop.css?v=1017a">
+<link rel="stylesheet" href="css/shop.css?v=1101a">
 <style>
 /* 編集画面：左に道具の切り替え、その隣に道具パネル、中央にケース */
 html,body{height:100%}
@@ -48,10 +48,11 @@ body{display:flex;flex-direction:column;background:#f1f0ed}
 .layers button{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:#fff;padding:9px 10px;font-size:13px;cursor:pointer;text-align:left}
 .layers button[aria-pressed="true"]{border-color:var(--text);background:#f7f6f3}
 .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;min-width:0;position:relative}
-.tools{position:absolute;top:12px;left:16px;display:flex;gap:6px}
+.tools{display:flex;flex-wrap:wrap;gap:6px;align-self:stretch}
 .tools button{border:1px solid var(--line);background:#fff;padding:6px 10px;font-size:12px;cursor:pointer}
 .tools button:disabled{opacity:.4;cursor:default}
-canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 170px);cursor:grab;filter:drop-shadow(0 10px 24px rgba(0,0,0,.15))}
+.tools #saveMy{border-color:#d9a0b4;color:#b0466a}
+canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 200px);cursor:grab;filter:drop-shadow(0 10px 24px rgba(0,0,0,.15))}
 .note{font-size:11px;color:var(--sub);text-align:center}
 .state{font-size:12px}
 /* 確認画面 */
@@ -101,6 +102,7 @@ canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 170px);cursor
     <div class="tools">
       <button type="button" id="undo" disabled>↶ 元に戻す</button>
       <button type="button" id="redo" disabled>↷ やり直し</button>
+      <button type="button" id="saveMy">♡ マイデザインに保存</button>
     </div>
     <canvas id="cv" width="546" height="1056" aria-label="デザイン"></canvas>
     <p class="note" id="shapeNote"></p>
@@ -110,10 +112,10 @@ canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 170px);cursor
 
 <script src="js/config.js?v=1020a"></script>
 <script src="js/models.js?v=1017a"></script>
-<script src="js/common.js?v=1018d"></script>
+<script src="js/common.js?v=1101a"></script>
 <script>
 (() => {
-const {S, yen, esc, getCart, setCart, api, loadImage, toJpeg, toast, isCafe, qs, product, shapeOf, shapePath} = window.LICO;
+const {myDesigns, S, yen, esc, getCart, setCart, api, loadImage, toJpeg, toast, isCafe, qs, product, shapeOf, shapePath} = window.LICO;
 const P = S.DESIGN;
 
 /* ===== 商品・印刷サイズと表示 =====
@@ -631,15 +633,66 @@ document.getElementById("confirmBtn").onclick = () => {
       cart.push({ key: Date.now().toString(36), productId: PR.id, option: optLabel, caseColor: CC ? CC.label : "", variant: variant ? variant.id : "", model: optLabel || PR.short, qty, fileId: fileIds[0], fileIds, designFileId: r.fileId, previewFileId: rl.fileId, thumb,
         cut, text: st.texts.filter(t => !t.stk).map(t => t.text).join("／"), font: st.texts.filter(t => !t.stk).map(t => (P.fonts.find(f => f.id === t.font) || {}).label).join("／"),
         color: st.texts.filter(t => !t.stk).map(t => colorName(t.color)).join("／") });
-      setCart(cart); location.href = "cart.html?added=1";
+      setCart(cart);
+      await saveMy().catch(() => {});   // カートに入れたデザインは、マイデザインにも残す（あとで同じデザインを注文し直せる）
+      location.href = "cart.html?added=1";
     }catch(err){ document.getElementById("mdState").textContent = err.message; e.target.disabled = false; }
   };
 };
+
+/* ===== マイデザイン（この端末に保存して、あとで開き直す） =====
+   写真は元の画像と、背景を消した画像をそのまま保存する。開き直したときは写真を送り直す（前の注文の写真と混ざらないように） */
+let myId = qs.get("my") || "";
+async function saveMy(){
+  if(!st.photos.length && !st.texts.length){ toast("写真か文字を入れてから保存してください"); return; }
+  if(cutting){ toast("背景を消し終わってから保存してください"); return; }
+  const btn = document.getElementById("saveMy"); btn.disabled = true;
+  try{
+    const prev = document.createElement("canvas"); prev.width = Math.round(PW * .25); prev.height = Math.round(PH * .25);
+    const pc = prev.getContext("2d"); pc.fillStyle = "#ffffff"; pc.fillRect(0, 0, prev.width, prev.height); paint(pc, .25, false);
+    const media2 = {};
+    for(const p of st.photos){
+      const m = media[p.id];
+      media2[p.id] = { orig: m.orig.src, cut: !!m.cut, cutBlob: m.cutImg ? await fetch(m.cutImg.src).then(r => r.blob()) : null };
+    }
+    const now = Date.now();
+    if(!myId) myId = "d" + now.toString(36);
+    await myDesigns.put({ id: myId, saved: now, productId: PR.id, opt, cc: ccId, qty, name: PR.short, optLabel: optLabel + (CC ? "／ケース：" + CC.label : ""),
+      thumb: prev.toDataURL("image/jpeg", .8), st: JSON.parse(JSON.stringify({ bg: st.bg, photos: st.photos, texts: st.texts })), media: media2 });
+    history.replaceState(null, "", location.pathname + "?" + new URLSearchParams(Object.assign(Object.fromEntries(qs), { my: myId })));
+    toast("マイデザインに保存しました（マイページから開けます）");
+  }catch(err){ toast(err.message || "保存できませんでした"); }
+  btn.disabled = false;
+}
+document.getElementById("saveMy").onclick = saveMy;
+async function openMy(){
+  const d = await myDesigns.get(myId).catch(() => null);
+  if(!d){ myId = ""; toast("保存したデザインが見つかりませんでした"); return; }
+  for(const p of d.st.photos){
+    const md = d.media[p.id]; if(!md) continue;
+    const orig = new Image(); orig.src = md.orig; await orig.decode();
+    let cutImg = null;
+    if(md.cutBlob){ cutImg = new Image(); cutImg.src = URL.createObjectURL(md.cutBlob); await cutImg.decode(); }
+    media[p.id] = { img: md.cut && cutImg ? cutImg : orig, orig, cut: !!(md.cut && cutImg), cutImg, fileId: "", uploading: true, err: "" };
+  }
+  st.bg = d.st.bg; st.texts = d.st.texts || []; st.photos = d.st.photos.filter(p => media[p.id]);
+  selP = (st.photos[st.photos.length - 1] || {}).id || null; sel = selP ? "photo" : null;
+  draw(); renderPanel(); toast("保存したデザインを開きました");
+  // 写真を送り直す（注文のときに必要）
+  await Promise.all(st.photos.map(async (p, i) => {
+    const m = media[p.id];
+    try{ const r = await api({ action: "uploadPhoto", name: "photo" + (i + 1) + ".jpg", data: m.orig.src.split(",")[1] }); m.fileId = r.fileId; }
+    catch(err){ m.err = err.message; }
+    m.uploading = false; if(selP === p.id) setState(photoStateText(), !!m.err);
+  }));
+  renderPanel();
+}
 
 window.LICO.chrome();
 // 書体は使うときまで読み込まれないので、最初に全部読み込んでから描き直す
 if(document.fonts){ document.fonts.ready.then(draw); Promise.all(P.fonts.map(f => document.fonts.load(`${f.weight || 400} 40px ${f.family}`, "あA").catch(() => {}))).then(draw); }
 renderPanel(); draw();
+if(myId) openMy();
 })();
 </script>
 </body>

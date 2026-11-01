@@ -105,6 +105,33 @@
 
   function toast(msg){ let t=document.querySelector(".toast"); if(!t){ t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); document.body.appendChild(t);} t.textContent=msg; t.classList.add("show"); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove("show"),2200); }
 
+
+  /* マイデザイン（作ったデザインをこの端末に保存。写真が大きいので IndexedDB に入れる。サーバーには送らない） */
+  const IDB = () => new Promise((ok, ng) => {
+    if(!window.indexedDB) return ng(new Error("この端末ではデザインを保存できません"));
+    const rq = indexedDB.open("ittenmon-my", 1);
+    rq.onupgradeneeded = () => rq.result.createObjectStore("designs", { keyPath: "id" });
+    rq.onsuccess = () => ok(rq.result); rq.onerror = () => ng(new Error("この端末ではデザインを保存できません（プライベートブラウズでは保存できないことがあります）"));
+  });
+  const idbDo = (mode, fn) => IDB().then(db => new Promise((ok, ng) => {
+    const tx = db.transaction("designs", mode), rq = fn(tx.objectStore("designs")); let out;
+    rq.onsuccess = () => { out = rq.result; };
+    tx.oncomplete = () => ok(out); tx.onerror = tx.onabort = () => ng(tx.error && tx.error.name === "QuotaExceededError" ? new Error("端末の空きが足りないため保存できませんでした。古いデザインを消してからお試しください。") : new Error("保存できませんでした"));
+  }));
+  const myDesigns = {
+    list: () => idbDo("readonly", os => os.getAll()).then(a => (a || []).sort((x, y) => y.saved - x.saved)),
+    get: id => idbDo("readonly", os => os.get(id)),
+    put: d => idbDo("readwrite", os => os.put(d)).then(() => d.id),
+    del: id => idbDo("readwrite", os => os.delete(id))
+  };
+  /* ご注文の控え（注文番号と電話の下4けただけ。マイページから状況を見るため） */
+  const KEY_ORDERS = "ittenmon-orders";
+  const myOrders = {
+    list: () => { try{ return JSON.parse(localStorage.getItem(KEY_ORDERS) || "[]"); }catch(_){ return []; } },
+    add: (orderNo, tel4) => { try{ if(!orderNo) return; const a = myOrders.list().filter(o => o.orderNo !== orderNo); a.unshift({ orderNo, tel4: tel4 || "", at: Date.now() }); localStorage.setItem(KEY_ORDERS, JSON.stringify(a.slice(0, 30))); }catch(_){} },
+    remove: orderNo => { try{ localStorage.setItem(KEY_ORDERS, JSON.stringify(myOrders.list().filter(o => o.orderNo !== orderNo))); }catch(_){} }
+  };
+
   /* ヘッダー・フッター */
   function chrome(){
     const head = document.getElementById("site-header");
@@ -113,7 +140,7 @@
       ${isCafe()?`<div class="mode-bar">${esc(cafeName())}でのご注文｜できあがったらこのカフェでお渡しします</div>`:`<div class="notice">${S.SHIPPING_FEE?`送料 全国一律 ${yen(S.SHIPPING_FEE)}`:"送料無料"}｜1点からおつくりします</div>`}
       <header class="site"><div class="wrap head">
         <a href="index.html" class="logo">${esc(S.SHOP_NAME)}</a>
-        <nav class="gnav"><a href="product.html">商品</a><a href="gallery.html">ギャラリー</a><a href="index.html#howto">ご注文の流れ</a><a href="index.html#gift">ギフト</a><a href="index.html#about">私たちについて</a><a href="product.html#faq">よくあるご質問</a></nav>
+        <nav class="gnav"><a href="product.html">商品</a><a href="gallery.html">ギャラリー</a><a href="index.html#howto">ご注文の流れ</a><a href="index.html#gift">ギフト</a><a href="index.html#about">私たちについて</a><a href="product.html#faq">よくあるご質問</a><a href="mypage.html">マイページ</a></nav>
         <a href="cart.html" class="cart-link" aria-label="カート"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7h14l-1.5 13h-11z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span class="cart-count" data-n="0">0</span></a>
       </div></header>`;
     }
@@ -122,7 +149,7 @@
       foot.outerHTML = `<footer class="site"><div class="wrap">
         <div class="foot">
           <div><div class="logo">${esc(S.SHOP_NAME)}</div><p style="margin-top:10px;color:#aaa">運営：株式会社かむらっど<br><a href="https://syurob-lico-fukuoka.github.io/syuroB-LICO/" target="_blank" rel="noopener" style="text-decoration:underline">就労継続支援B型 LICO（リコ）</a></p></div>
-          <div><h4>ショップ</h4><ul><li><a href="product.html">商品</a></li><li><a href="gallery.html">ギャラリー（制作実績）</a></li><li><a href="index.html#howto">ご注文の流れ</a></li><li><a href="cart.html">カート</a></li></ul></div>
+          <div><h4>ショップ</h4><ul><li><a href="product.html">商品</a></li><li><a href="gallery.html">ギャラリー（制作実績）</a></li><li><a href="index.html#howto">ご注文の流れ</a></li><li><a href="cart.html">カート</a></li><li><a href="mypage.html">マイページ（マイデザイン・注文の状況）</a></li></ul></div>
           <div><h4>ご案内</h4><ul><li><a href="tokushoho.html">特定商取引法に基づく表記</a></li><li><a href="tokushoho.html#privacy">プライバシーポリシー</a></li><li><a href="${esc(S.LINE_URL)}" target="_blank" rel="noopener">LINEでお問い合わせ</a></li><li><a href="#" data-install="1">アプリで使う（ホーム画面に追加）</a></li><li style="margin-top:10px"><a href="staff.html" style="color:#888;font-size:11px">スタッフ用（受注管理）</a></li></ul></div>
         </div>
         <div class="pay"><span>VISA</span><span>Mastercard</span><span>JCB</span><span>AMEX</span><span>Apple Pay</span><span>Google Pay</span></div>
@@ -137,6 +164,7 @@
       nav.innerHTML = tab("index.html","ホーム",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>')
         + tab("product.html","つくる",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><circle cx="12" cy="11" r="3"/></svg>')
         + tab("gallery.html","ギャラリー",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>')
+        + tab("mypage.html","マイページ",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>')
         + tab("cart.html","カート",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7h14l-1.5 13h-11z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>','<span class="cart-count" data-n="0">0</span>');
       document.body.appendChild(nav); document.body.classList.add("has-tabbar");
     }
@@ -167,5 +195,5 @@
   }
   if("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 
-  window.LICO = { S, yen, esc, isCafe, cafeId, cafeName, installApp, getCart, setCart, subtotal, shipping, api, loadImage, toJpeg, toast, chrome, qs, product, unitPrice, optionText, phoneModel, shapeOf, shapePath, shapeIcon };
+  window.LICO = { myDesigns, myOrders, S, yen, esc, isCafe, cafeId, cafeName, installApp, getCart, setCart, subtotal, shipping, api, loadImage, toJpeg, toast, chrome, qs, product, unitPrice, optionText, phoneModel, shapeOf, shapePath, shapeIcon };
 })();

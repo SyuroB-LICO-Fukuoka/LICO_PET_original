@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/shop.css?v=1017a">
+<link rel="stylesheet" href="css/shop.css?v=1101a">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff">
 <link rel="apple-touch-icon" href="img/app/shop-180.png">
@@ -26,7 +26,7 @@
 <div id="site-footer"></div>
 
 <script src="js/config.js?v=1020a"></script>
-<script src="js/common.js?v=1018d"></script>
+<script src="js/common.js?v=1101a"></script>
 <script src="js/chatbot.js?v=1020a" defer></script>
 <script>
 (() => {
@@ -167,6 +167,7 @@
         items: cart.map(i=>({productId:i.productId||"phone", variant:i.variant||"", model:optionText(i)||product(i.productId||"phone").short, fileId:i.fileId, fileIds:i.fileIds||[i.fileId], designFileId:i.designFileId, previewFileId:i.previewFileId||"", text:i.text, font:i.font, color:i.color, qty:i.qty})),
         customer: {name:f.name, kana:f.kana, tel:f.tel, email:f.email, zip:f.zip, address:f.address, note:f.note},
         delivery: f.delivery, payMethod: f.pay, coupon: f.coupon });
+      try{ localStorage.setItem("ittenmon-last-tel4", String(f.tel).replace(/\D/g, "").slice(-4)); localStorage.setItem("ittenmon-last-order", r.orderNo); }catch(_){}
       if(r.checkoutUrl){ location.href = r.checkoutUrl; return; }
       setCart([]);
       location.href = "complete.html?order=" + encodeURIComponent(r.orderNo) + (r.free ? "&free=1" : "");

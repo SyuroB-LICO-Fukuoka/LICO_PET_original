@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>マイページ｜ITTENMON</title>
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="img/app/shop-180.png">
+<link rel="icon" href="img/app/shop-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ITTENMON">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shop.css?v=1101a">
+<style>
+.my-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:22px}
+.my-tabs button{border:1px solid var(--line);background:#fff;padding:9px 18px;font-size:14px;border-radius:999px;cursor:pointer}
+.my-tabs button[aria-pressed="true"]{background:var(--text);border-color:var(--text);color:#fff}
+.my-sec{max-width:760px;margin:0 auto;padding-bottom:60px}
+.my-help{font-size:13px;color:var(--sub);text-align:center;margin:0 0 18px}
+.dz{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.dz .card{border:1px solid var(--line);background:#fff;display:flex;flex-direction:column}
+.dz .card img{width:100%;aspect-ratio:3/4;object-fit:contain;background:var(--bg-sub);padding:10px}
+.dz .card .t{padding:8px 10px 0;font-size:13px;font-weight:700}
+.dz .card .s{padding:0 10px;font-size:11.5px;color:var(--sub)}
+.dz .card .b{display:flex;gap:6px;padding:10px;margin-top:auto}
+.dz .card .b a,.dz .card .b button{flex:1;text-align:center;font-size:12.5px;padding:8px 4px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--text)}
+.dz .card .b a{background:var(--text);border-color:var(--text);color:#fff}
+.empty{text-align:center;color:var(--sub);font-size:14px;padding:30px 0}
+.form{display:grid;gap:12px;max-width:420px;margin:0 auto 22px}
+.form label{font-size:13px;font-weight:700}
+.form input{width:100%;border:1px solid var(--line);padding:12px;font-size:16px}
+.ord{border:1px solid var(--line);background:#fff;padding:18px;margin-bottom:14px}
+.ord .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ord .no{font-family:var(--f-en);font-size:18px;letter-spacing:.06em}
+.ord .st{font-weight:700}
+.ord .items{font-size:13px;color:#555;margin:8px 0 0}
+.steps{list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:16px 0 6px;padding:0}
+.steps li{font-size:11px;text-align:center;color:var(--sub);line-height:1.35;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0;margin:0}
+.steps li::before,.steps li::after{content:none!important;display:none!important}
+.steps .dot{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:11px;line-height:20px;font-family:var(--f-en)}
+.steps li.done{color:var(--text)}
+.steps li.done .dot{background:var(--text);border-color:var(--text);color:#fff}
+.steps li.now{color:var(--text);font-weight:700}
+.steps li.now .dot{background:var(--accent);border-color:var(--accent);color:#fff}
+.ord .note{font-size:13px;margin-top:10px;background:var(--bg-sub);padding:10px 12px}
+.ord .rm{font-size:12px;color:var(--sub);background:none;border:0;text-decoration:underline;cursor:pointer;margin-top:8px}
+.ord.err{color:var(--danger);font-size:13px}
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap">
+  <div class="page-title"><span class="en">MY PAGE</span><h1>マイページ</h1></div>
+  <div class="my-tabs" role="tablist">
+    <button type="button" data-t="design" aria-pressed="true">マイデザイン</button>
+    <button type="button" data-t="order" aria-pressed="false">ご注文の状況</button>
+  </div>
+
+  <section class="my-sec" id="sec-design">
+    <p class="my-help">デザインの画面で「♡ マイデザインに保存」を押したデザインと、カートに入れたデザインがここに残ります。<br>この端末（このブラウザ）にだけ保存されます。</p>
+    <div class="dz" id="dz"></div>
+  </section>
+
+  <section class="my-sec" id="sec-order" hidden>
+    <p class="my-help">注文番号と、ご注文のときの電話番号の下4けたで、いまの状況を確認できます。<br>この端末でご注文いただいた分は、下に自動で出ます。</p>
+    <form class="form" id="frm">
+      <div><label for="no">注文番号</label><input id="no" inputmode="numeric" placeholder="例：261101-01" autocomplete="off"></div>
+      <div><label for="t4">電話番号の下4けた</label><input id="t4" inputmode="numeric" maxlength="4" placeholder="例：1234" autocomplete="off"></div>
+      <button class="btn btn-block" type="submit">状況を確認する</button>
+    </form>
+    <div id="orders"></div>
+  </section>
+</main>
+<div id="site-footer"></div>
+<script src="js/config.js?v=1020a"></script>
+<script src="js/common.js?v=1101a"></script>
+<script src="js/chatbot.js?v=1020a" defer></script>
+<script>
+(() => {
+  const {S, esc, api, chrome, qs, toast, myDesigns, myOrders} = window.LICO;
+  chrome();
+
+  /* タブ（?tab=order で注文の状況を開く） */
+  const show = t => {
+    document.querySelectorAll(".my-tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === t));
+    document.getElementById("sec-design").hidden = t !== "design"; document.getElementById("sec-order").hidden = t !== "order";
+    if(t === "order") loadSaved();
+  };
+  document.querySelectorAll(".my-tabs button").forEach(b => b.onclick = () => show(b.dataset.t));
+
+  /* ===== マイデザイン ===== */
+  async function renderDesigns(){
+    const box = document.getElementById("dz");
+    let list = [];
+    try{ list = await myDesigns.list(); }catch(err){ box.innerHTML = `<p class="empty">${esc(err.message)}</p>`; return; }
+    if(!list.length){ box.innerHTML = `<div class="empty" style="grid-column:1/-1">まだ保存したデザインはありません。<br><a class="btn" href="product.html" style="margin-top:16px">デザインをつくる</a></div>`; return; }
+    box.innerHTML = list.map(d => {
+      const url = "design.html?" + new URLSearchParams({ product: d.productId, opt: d.opt || "", cc: d.cc || "", qty: d.qty || 1, my: d.id });
+      const day = new Date(d.saved); const ds = `${day.getMonth() + 1}/${day.getDate()} ${String(day.getHours()).padStart(2, "0")}:${String(day.getMinutes()).padStart(2, "0")}`;
+      return `<div class="card"><img src="${d.thumb}" alt="保存したデザイン"><div class="t">${esc(d.name)}</div><div class="s">${esc(d.optLabel || "")}</div><div class="s">${ds} 保存</div>
+        <div class="b"><a href="${esc(url)}">開く</a><button type="button" data-del="${esc(d.id)}">消す</button></div></div>`;
+    }).join("");
+    box.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+      if(b.dataset.sure !== "1"){ b.dataset.sure = "1"; b.textContent = "本当に消す"; b.style.color = "var(--danger)"; return; }
+      await myDesigns.del(b.dataset.del).catch(() => {}); toast("デザインを消しました"); renderDesigns();
+    });
+  }
+
+  /* ===== ご注文の状況 ===== */
+  const STEPS = ["ご注文受付", "製作の順番待ち", "製作中", "検品・梱包", "できあがり"];
+  const stepOf = s => ({ "決済待ち": 0, "入金待ち": 0, "製造待ち": 1, "製作中": 2, "検品・梱包": 3, "お渡し・発送待ち": 4, "完了": 5 })[s];
+  function message(r){
+    switch(r.status){
+      case "決済待ち": return "お支払いの確認を待っています。お支払いが済んでいる場合は、確認でき次第すすみます。";
+      case "入金待ち": return "お代金のお支払いを確認しだい、製作の順番に入ります。";
+      case "製造待ち": return "お支払いを確認しました。製作の順番をお待ちください。";
+      case "製作中": return "いま、心をこめて製作しています。";
+      case "検品・梱包": return "できあがりました。仕上がりを確認して、お包みしています。";
+      case "お渡し・発送待ち": return r.pickup ? `できあがりました。${esc(r.place.replace(/で受け取り$/, ""))}でお受け取りいただけます。` : "できあがりました。まもなく発送します。";
+      case "完了": return r.pickup ? "お受け取りいただきました。ありがとうございました。" : "発送しました。届くまでしばらくお待ちください。";
+      case "キャンセル": return "このご注文はキャンセルになっています。ご不明な点はLINEでお問い合わせください。";
+      default: return "";
+    }
+  }
+  function card(r, saved){
+    const k = stepOf(r.status);
+    const steps = r.status === "キャンセル" ? "" : `<ol class="steps">${STEPS.map((s, i) => `<li class="${k > i || k === 5 ? "done" : k === i ? "now" : ""}"><span class="dot">${i + 1}</span>${s}</li>`).join("")}</ol>`;
+    return `<div class="ord"><div class="hd"><span class="no">${esc(r.orderNo)}</span><span class="st">${esc(r.status === "完了" ? "お届け済み" : r.status)}</span></div>
+      <p class="items">${(r.items || []).map(it => `${esc(it.name)}${it.option && it.option !== it.name ? "（" + esc(it.option) + "）" : ""} ×${it.qty}`).join("<br>")}</p>
+      ${steps}
+      <p class="note">${message(r)}${r.due && k >= 1 && k < 4 ? `<br>できあがりの目安：<b>${esc(r.due.replace(/^(\d+)-(\d+)-(\d+)$/, (_, y, m, d) => `${+m}月${+d}日ごろ`))}</b>` : ""}</p>
+      <p class="items">ご注文日：${esc(r.date)}</p>
+      ${saved ? `<button type="button" class="rm" data-rm="${esc(r.orderNo)}">この端末の一覧から外す</button>` : ""}</div>`;
+  }
+  const errText = err => /不明な操作/.test(err.message) ? "注文状況の確認は、まもなく使えるようになります。お急ぎの方はLINEでお問い合わせください。" : err.message;
+  async function lookup(no, t4){ return api({ action: "orderStatus", orderNo: no, tel4: t4 }); }
+  let loaded = false;
+  async function loadSaved(){
+    if(loaded) return; loaded = true;
+    const box = document.getElementById("orders"), list = myOrders.list().filter(o => o.tel4);
+    if(!list.length) return;
+    box.innerHTML = `<div class="spinner" aria-label="確認中"></div>`;
+    const out = await Promise.all(list.map(o => lookup(o.orderNo, o.tel4).then(r => card(r, true)).catch(err => `<div class="ord err">${esc(o.orderNo)}：${esc(errText(err))}</div>`)));
+    box.innerHTML = out.join("");
+    bindRemove();
+  }
+  function bindRemove(){ document.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { myOrders.remove(b.dataset.rm); b.closest(".ord").remove(); }); }
+  const half = s => String(s || "").replace(/[０-９－]/g, c => c === "－" ? "-" : String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).trim();
+  document.getElementById("frm").onsubmit = async e => {
+    e.preventDefault();
+    const no = half(document.getElementById("no").value), t4 = half(document.getElementById("t4").value);
+    const btn = e.target.querySelector("button"); btn.disabled = true; btn.textContent = "確認しています…";
+    const box = document.getElementById("orders");
+    try{
+      const r = await lookup(no, t4);
+      myOrders.add(r.orderNo, t4);
+      box.querySelectorAll(".ord").forEach(x => { if(x.querySelector(".no") && x.querySelector(".no").textContent === r.orderNo) x.remove(); });
+      box.insertAdjacentHTML("afterbegin", card(r, true)); bindRemove();
+    }catch(err){ box.insertAdjacentHTML("afterbegin", `<div class="ord err">${esc(errText(err))}</div>`); }
+    btn.disabled = false; btn.textContent = "状況を確認する";
+  };
+
+  renderDesigns();
+  show(qs.get("tab") === "order" ? "order" : "design");
+})();
+</script>
+</body>
+</html>

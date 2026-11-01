@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/shop.css?v=1017a">
+<link rel="stylesheet" href="css/shop.css?v=1101a">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff">
 <link rel="apple-touch-icon" href="img/app/shop-180.png">
@@ -25,21 +25,24 @@
 </main>
 <div id="site-footer"></div>
 <script src="js/config.js?v=1020a"></script>
-<script src="js/common.js?v=1018d"></script>
+<script src="js/common.js?v=1101a"></script>
 <script src="js/chatbot.js?v=1020a" defer></script>
 <script>
 (async () => {
-  const {S, esc, isCafe, setCart, api, chrome, qs} = window.LICO;
+  const {S, esc, isCafe, setCart, api, chrome, qs, myOrders} = window.LICO;
   chrome();
   const order = qs.get("order") || "", sid = qs.get("session_id") || "";
   const box = document.getElementById("box"), ttl = document.getElementById("ttl");
-  const line = `<p>ご不明な点は、注文番号を添えてLINE（${esc(S.LINE_ID)}）でお問い合わせください。</p>`;
+  // この端末の「マイページ」に注文を残す（電話の下4けたはカートで控えたもの）
+  let tel4 = ""; try{ if(localStorage.getItem("ittenmon-last-order") === order) tel4 = localStorage.getItem("ittenmon-last-tel4") || ""; }catch(_){}
+  if(order) myOrders.add(order, tel4);
+  const line = `<p>製作の進み具合は、<a href="mypage.html?tab=order" style="text-decoration:underline">マイページ</a>でいつでも確認できます。</p><p>ご不明な点は、注文番号を添えてLINE（${esc(S.LINE_ID)}）でお問い合わせください。</p>`;
 
   if(qs.get("free")){   // クーポンで0円になった注文（支払いなし）
     setCart([]);
     ttl.textContent = "ご注文ありがとうございました";
     box.innerHTML = `<p>注文番号</p><p class="no">${esc(order)}</p>
-      <p>クーポンでのご注文を受け付けました。お支払いはありません。${isCafe() ? "" : "確認メールをお送りしています。"}ご注文から1か月ほどでお届けします。</p>
+      <p>クーポンでのご注文を受け付けました。お支払いはありません。${isCafe() ? "" : "確認メールをお送りしています。"}ご注文から1か月ほどでお届けします。</p><p>製作の進み具合は、<a href="mypage.html?tab=order" style="text-decoration:underline">マイページ</a>で確認できます。</p>
       ${isCafe()?`<a class="btn" href="gallery.html">ほかのお客様の作品を見る</a>`:`<a class="btn" href="index.html">トップへ戻る</a>`}`;
     return;
   }
