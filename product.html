@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>商品一覧｜ITTENMON</title>
 <meta name="description" content="お気に入りの写真でつくる、世界にひとつのスマホケース・名刺入れ・インテリアボード。写真をアップロードし、画面の上で位置や大きさ、文字を決めて注文できます。">
+<link rel="canonical" href="https://syurob-lico-fukuoka.github.io/LICO_PET_original/product.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ITTENMON">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:title" content="商品一覧｜ITTENMON 写真でつくるオリジナルグッズ">
+<meta property="og:description" content="お気に入りの写真でつくる、世界にひとつのスマホケース・名刺入れ・インテリアボード。1個から・送料無料。">
+<meta property="og:url" content="https://syurob-lico-fukuoka.github.io/LICO_PET_original/product.html">
+<meta property="og:image" content="https://syurob-lico-fukuoka.github.io/LICO_PET_original/img/phonecase.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
@@ -105,6 +114,20 @@
   /* ===== 商品ページ ===== */
   const P = product(id);
   document.title = P.name + "｜" + S.SHOP_NAME;
+  // 検索エンジン向け：商品ごとの説明・正しいURL・商品情報（値段・在庫）を入れる
+  try{
+    const url = location.origin + location.pathname + "?id=" + encodeURIComponent(P.id), desc = String(P.lead || "").replace(/\n/g, "");
+    const setMeta = (sel, attr, val) => { const m = document.querySelector(sel); if(m) m.setAttribute(attr, val); };
+    setMeta('meta[name="description"]', "content", desc); setMeta('link[rel="canonical"]', "href", url);
+    setMeta('meta[property="og:title"]', "content", P.name + "｜" + S.SHOP_NAME); setMeta('meta[property="og:description"]', "content", desc);
+    setMeta('meta[property="og:url"]', "content", url); setMeta('meta[property="og:image"]', "content", new URL((P.images||[])[0] || "img/phonecase.jpg", location.href).href);
+    const prices = (P.variants || []).map(v => v.price).concat(P.price || []);
+    const ld = { "@context": "https://schema.org", "@type": "Product", name: P.name, description: desc, image: (P.images||[]).map(i => new URL(i, location.href).href),
+      brand: { "@type": "Brand", name: S.SHOP_NAME },
+      offers: { "@type": "AggregateOffer", priceCurrency: "JPY", lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: Math.max(1, (P.variants||[]).length),
+        availability: "https://schema.org/InStock", url, shippingDetails: { "@type": "OfferShippingDetails", shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "JPY" }, shippingDestination: { "@type": "DefinedRegion", addressCountry: "JP" } } } };
+    const sc = document.createElement("script"); sc.type = "application/ld+json"; sc.textContent = JSON.stringify(ld); document.head.appendChild(sc);
+  }catch(_){}
   main.innerHTML = `
   <p style="font-size:12px;margin:6px 0 -6px"><a href="product.html" style="text-decoration:underline">商品一覧</a> ＞ ${esc(P.short)}</p>
   <div class="p-head"><p class="series en">${esc(P.series)}</p><h1>${esc(P.name)}</h1>
