@@ -711,7 +711,17 @@ function viewStats(){
   <section><div class="sec-h"><h2>日ごとの表示回数（14日間）</h2></div><div class="card card-pad"><div class="spark">${st.daily.map(d=>`<div title="${d.date}：${d.views}回"><span class="v">${d.views||""}</span><b style="height:${Math.round(d.views/dmax*82)}%"></b><span>${+d.date.slice(8)}</span></div>`).join("")}</div></div></section>
   <div class="two"><section><div class="sec-h"><h2>注文までの進み具合（30日）</h2></div><div class="card card-pad bars">${st.funnel.map(s=>`<div class="bar-row"><span>${esc(s.step)}</span>${bar(s.users,f0||1)}<b class="num">${s.users}人${f0?` <span class="muted small">${Math.round(s.users/f0*100)}%</span>`:""}</b></div>`).join("")}</div></section>
   <section><div class="sec-h"><h2>よく見られているページ</h2></div><div class="card card-pad bars">${pages.length?pages.map(p=>`<div class="bar-row"><span>${esc(p.label)}</span>${bar(p[app.period],pmax)}<b class="num">${p[app.period]}</b></div>`).join(""):`<span class="muted">この期間の記録はまだありません</span>`}</div></section></div>
+  <section><div class="sec-h"><h2>どこから来たか（30日）</h2></div><div class="card card-pad bars">${(st.refs||[]).length?st.refs.map(r=>`<div class="bar-row"><span>${esc(refLabel(r.host))}</span>${bar(r.views,st.refs[0].views)}<b class="num">${r.views}</b></div>`).join(""):`<span class="muted">まだ記録がありません</span>`}</div>
+  <p class="muted small" style="margin:6px 0 0">SNSに貼るリンクの最後に <b>?from=tiktok</b>（TikTok）・<b>?from=insta</b>（Instagram）・<b>?from=fb</b>（Facebook）・<b>?from=line</b>（LINE）のように付けると、ここで分けて数えられます。ブックマークや直接入力など、どこから来たか分からない分は出ません。</p></section>
   <p class="muted small" style="margin:0">スタッフが開いた端末は数えません。名前などの個人情報は記録していません。</p>`;
+}
+// 流入元の表示名
+function refLabel(h){
+  h = String(h||"").toLowerCase();
+  const M = [[/^(tiktok|tt)$|tiktok\.com/,"TikTok"],[/^tiktok-app$/,"TikTok（アプリ内）"],[/^(insta|instagram|ig)$|instagram\.com/,"Instagram"],[/^instagram-app$/,"Instagram（アプリ内）"],
+    [/^(fb|facebook)$|facebook\.com|fb\.me/,"Facebook"],[/^facebook-app$/,"Facebook（アプリ内）"],[/^line$|line\.me/,"LINE"],[/^line-app$/,"LINE（アプリ内）"],
+    [/google\./,"Google検索"],[/yahoo\./,"Yahoo!検索"],[/^(x|twitter)$|t\.co$|x\.com|twitter\.com/,"X（旧Twitter）"],[/^qr/,"QRコード"],[/lico/,"LICOのホームページ"]];
+  const hit = M.find(([re])=>re.test(h)); return hit ? hit[1] : h;
 }
 
 /* ============================================================

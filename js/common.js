@@ -85,7 +85,15 @@
       let vid = localStorage.getItem("ittenmon-vid");
       if(!vid){ vid = Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); localStorage.setItem("ittenmon-vid", vid); }
       const page = (location.pathname.split("/").pop() || "index.html").replace(/\.html$/, "") || "index";
+      // どこから来たか：①リンクに付けた ?from=tiktok などの印 ②前のページのドメイン ③SNSアプリの中のブラウザ（前のページが分からない時）
       let ref = ""; try{ const r = document.referrer && new URL(document.referrer); if(r && r.host !== location.host) ref = r.host; }catch(_){}
+      const from = (qs.get("from") || qs.get("utm_source") || "").toLowerCase().replace(/[^\w-]/g, "").slice(0, 30);
+      if(from) ref = from;
+      else if(!ref && !sessionStorage.getItem("ittenmon-landed")){
+        const ua = navigator.userAgent;
+        ref = /BytedanceWebview|musical_ly|TikTok/i.test(ua) ? "tiktok-app" : /Instagram/i.test(ua) ? "instagram-app" : /FBAN|FBAV|FB_IAB/i.test(ua) ? "facebook-app" : /\bLine\//i.test(ua) ? "line-app" : "";
+      }
+      try{ sessionStorage.setItem("ittenmon-landed", "1"); }catch(_){}
       const body = JSON.stringify({action:"track", page, product: qs.get("product") || qs.get("id") || "", vid, mode: isCafe() ? "cafe" : "net", ref});
       if(!(navigator.sendBeacon && navigator.sendBeacon(S.GAS_URL, new Blob([body], {type:"text/plain"})))) fetch(S.GAS_URL, {method:"POST", body, keepalive:true}).catch(()=>{});
     }catch(_){}
