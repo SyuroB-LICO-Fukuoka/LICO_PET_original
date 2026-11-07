@@ -141,6 +141,8 @@ if(isCafe()) document.getElementById("cafeBar").innerHTML = `<div class="mode-ba
 let st = { bg: SH.base ? null : "#ffffff", photos: [], texts: [] };   // bg が null＝素材の色のまま（印刷しない）。photos：重ねる写真（あとのものほど上）{id, x, y, scale, rot, w, h}
 let sel = "photo", selP = null;                        // 選んでいるもの："photo"（selP の写真）または テキストの番号
 const MAX_PHOTOS = 3, MAX_STK = 30;
+// このデザイン1回分の番号。写真は受付前の中の、この番号のフォルダにまとめて入る
+const DSID = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const NUM = i => "①②③④⑤⑥⑦⑧⑨⑩"[i] || String(i + 1);   // 写真の番号（保存するファイル名と同じ）
 const media = {};                                      // 写真ごとの画像と送信状態 {img, orig, cut, cutImg, fileId, uploading, err}
 let cutting = false;
@@ -415,7 +417,7 @@ async function onPhoto(file){
     else p.scale = Math.min(PW * .6 / p.w, PH * .6 / p.h);           // 2枚目からは小さめに中央へ
     st.photos.push(p); selP = id; sel = "photo"; draw(); renderPanel();
     setState("写真を送っています…");
-    const r = await api({ action: "uploadPhoto", name: file.name, data: big.split(",")[1] });
+    const r = await api({ action: "uploadPhoto", sid: DSID, name: file.name, data: big.split(",")[1] });
     m.fileId = r.fileId; m.uploading = false; if(selP === id) setState("写真を受け付けました");
   }catch(err){ console.error(err); m.uploading = false; m.err = err.message; if(selP === id) setState(err.message, true); else toast(err.message); }
   renderPanel();
@@ -626,8 +628,8 @@ document.getElementById("confirmBtn").onclick = () => {
     e.target.disabled = true; document.getElementById("mdState").textContent = "できあがり画像を送っています…";
     try{
       const [r, rl] = await Promise.all([
-        api({ action: "uploadPhoto", name: png ? "design.png" : "design.jpg", mime: png ? "image/png" : "image/jpeg", data: full.split(",")[1] }),
-        api({ action: "uploadPhoto", name: "preview.jpg", data: lookData.split(",")[1] })
+        api({ action: "uploadPhoto", sid: DSID, name: png ? "design.png" : "design.jpg", mime: png ? "image/png" : "image/jpeg", data: full.split(",")[1] }),
+        api({ action: "uploadPhoto", sid: DSID, name: "preview.jpg", data: lookData.split(",")[1] })
       ]);
       const cart = getCart();
       cart.push({ key: Date.now().toString(36), productId: PR.id, option: optLabel, caseColor: CC ? CC.label : "", variant: variant ? variant.id : "", model: optLabel || PR.short, qty, fileId: fileIds[0], fileIds, designFileId: r.fileId, previewFileId: rl.fileId, thumb,
@@ -681,7 +683,7 @@ async function openMy(){
   // 写真を送り直す（注文のときに必要）
   await Promise.all(st.photos.map(async (p, i) => {
     const m = media[p.id];
-    try{ const r = await api({ action: "uploadPhoto", name: "photo" + (i + 1) + ".jpg", data: m.orig.src.split(",")[1] }); m.fileId = r.fileId; }
+    try{ const r = await api({ action: "uploadPhoto", sid: DSID, name: "photo" + (i + 1) + ".jpg", data: m.orig.src.split(",")[1] }); m.fileId = r.fileId; }
     catch(err){ m.err = err.message; }
     m.uploading = false; if(selP === p.id) setState(photoStateText(), !!m.err);
   }));
