@@ -110,7 +110,7 @@ canvas#cv{touch-action:none;max-width:100%;max-height:calc(100vh - 200px);cursor
 </div>
 <div id="modalHost"></div>
 
-<script src="js/config.js?v=1020a"></script>
+<script src="js/config.js?v=1107d"></script>
 <script src="js/models.js?v=1017a"></script>
 <script src="js/common.js?v=1107b"></script>
 <script>
@@ -401,6 +401,12 @@ function frameIcon(k){
   return `<g fill="#cfc8bd" stroke="#555" stroke-width="1.2">${cv2[k] || cv2.rect}</g>`;
 }
 const anyUploading = () => st.photos.some(p => media[p.id] && media[p.id].uploading);
+// 見本の写真で試す（写真を選ぶ前に、仕上がりの雰囲気を見てもらう）
+document.addEventListener("click", async e => {
+  if(!e.target.closest || !e.target.closest("#trySample")) return;
+  try{ const blob = await (await fetch("img/sample-shiba.jpg")).blob(); onPhoto(new File([blob], "sample.jpg", { type: "image/jpeg" })); }
+  catch(err){ toast("見本の写真を読み込めませんでした"); }
+});
 async function onPhoto(file){
   if(!file) return;
   if(st.photos.length >= MAX_PHOTOS){ toast("写真は" + MAX_PHOTOS + "枚までです"); return; }
@@ -471,6 +477,7 @@ function renderPanel(){
     panel.innerHTML = `<h2>写真・データ</h2>
       ${st.photos.length >= MAX_PHOTOS ? `<p class="help" style="border:1px dashed var(--line);padding:14px;text-align:center">写真は${MAX_PHOTOS}枚まで入っています。入れ替えるときは、写真を選んで「この写真を消す」を押してください。</p>` : ""}
       <label class="tile" ${st.photos.length >= MAX_PHOTOS ? "hidden" : ""}><input type="file" id="file" accept="image/*"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>${st.photos.length ? "写真を追加する（重ねる）" : "写真をえらぶ"}</label>
+      ${st.photos.length ? "" : `<button class="btn btn-line" type="button" id="trySample" style="width:100%;margin-top:8px">見本の写真で試してみる</button><p class="help" style="font-size:12px">手もとに写真がなくても、見本の写真で仕上がりを試せます。あとで「この写真を消す」で入れ替えられます。</p>`}
       <p class="help">写真は${MAX_PHOTOS}枚まで入れられます（いま${st.photos.length}枚）。入れた順に 写真①・②・③ になり、あとから入れた写真ほど上に重なります。</p>
       ${st.photos.length > 1 ? `<div class="layers">${st.photos.map((x, i) => `<button type="button" data-ph="${x.id}" aria-pressed="${p && x.id === p.id}">写真${NUM(i)}${i === st.photos.length - 1 ? "（いちばん上）" : i === 0 ? "（いちばん下）" : ""}<span>›</span></button>`).reverse().join("")}</div>` : ""}
       ${p ? `<p class="state" id="photoState">${esc(photoStateText())}</p>
